@@ -34,6 +34,8 @@
   --ez-ink: #1d1d1f;
   --ez-muted: #6e6e73;
   --ez-accent: #007aff;
+  --ez-ok: #1a7f37;
+  --ez-warn: #9a6700;
   --sidebar: oklch(0.985 0 0);
   --sidebar-foreground: oklch(0.145 0 0);
   --sidebar-primary: oklch(0.205 0 0);
@@ -85,19 +87,19 @@ body {
   z-index: 20;
   backdrop-filter: saturate(180%) blur(20px);
   -webkit-backdrop-filter: saturate(180%) blur(20px);
-  background: rgba(242, 242, 247, 0.8);
-  border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+  background: color-mix(in srgb, var(--ez-bg) 80%, transparent);
+  border-bottom: 1px solid var(--border);
 }
 
 .ez-card {
   background: var(--ez-card);
-  border: 1px solid rgba(0, 0, 0, 0.06);
+  border: 1px solid var(--border);
   border-radius: 14px;
 }
 
 .ez-pre {
   white-space: pre-wrap;
-  background: #f2f2f7;
+  background: var(--ez-bg);
   border-radius: 10px;
   padding: 10px 12px;
   font-size: 13.5px;

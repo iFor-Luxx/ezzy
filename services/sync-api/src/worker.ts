@@ -11,7 +11,15 @@ const auth = new AuthStore();
 const server = new SyncServer(auth);
 
 function json(data: unknown, status = 200): Response {
-  return new Response(JSON.stringify(data), { status, headers: { "Content-Type": "application/json" } });
+  return new Response(JSON.stringify(data), {
+    status,
+    headers: {
+      "Content-Type": "application/json",
+      "Access-Control-Allow-Origin": "*",
+      "Access-Control-Allow-Methods": "GET,POST,OPTIONS",
+      "Access-Control-Allow-Headers": "Content-Type,x-ezzy-installation",
+    },
+  });
 }
 
 function authorizedId(req: Request): string | null {
@@ -32,6 +40,19 @@ export default {
   async fetch(req: Request): Promise<Response> {
     const url = new URL(req.url);
     const path = url.pathname;
+
+    // Preflight CORS: la web en Pages llama al Worker desde otro origen.
+    if (req.method === "OPTIONS") {
+      return new Response(null, {
+        status: 204,
+        headers: {
+          "Access-Control-Allow-Origin": "*",
+          "Access-Control-Allow-Methods": "GET,POST,OPTIONS",
+          "Access-Control-Allow-Headers": "Content-Type,x-ezzy-installation",
+          "Access-Control-Max-Age": "86400",
+        },
+      });
+    }
 
     if (req.method === "POST" && path === "/v1/enroll") {
       const body = await readJson(req);

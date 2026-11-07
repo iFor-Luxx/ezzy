@@ -11,8 +11,8 @@ export default function Configuracion(props: { s: WebState; set: React.Dispatch<
   const [section, setSection] = React.useState<string>("asistente");
   const current = SECTIONS.find((x) => x.id === section) ?? SECTIONS[0];
   return (
-    <div className="grid overflow-hidden rounded-2xl border border-[#e8e8ed] bg-white md:grid-cols-[240px_1fr]">
-      <aside aria-label="Ajustes" className="bg-[#f5f5f7]/80 p-2">
+    <div className="grid overflow-hidden rounded-2xl border border-border bg-card md:grid-cols-[240px_1fr]">
+      <aside aria-label="Ajustes" className="bg-muted/80 p-2">
         {SECTIONS.map((it) => {
           const Icon = it.icon;
           const active = section === it.id;
@@ -25,7 +25,7 @@ export default function Configuracion(props: { s: WebState; set: React.Dispatch<
                 active ? "bg-black/[0.07]" : "hover:bg-black/[0.04]"
               }`}
             >
-              <span className="flex h-7 w-7 shrink-0 items-center justify-center text-[#6e6e73]">
+              <span className="flex h-7 w-7 shrink-0 items-center justify-center text-(--ez-muted)">
                 <Icon size={17} />
               </span>
               {it.label}
@@ -33,7 +33,7 @@ export default function Configuracion(props: { s: WebState; set: React.Dispatch<
           );
         })}
       </aside>
-      <div className="min-w-0 border-t border-[#e8e8ed] p-5 md:border-l md:border-t-0">
+      <div className="min-w-0 border-t border-border p-5 md:border-l md:border-t-0">
         <h1 className="mb-4 text-[19px] font-bold tracking-tight">{current.label}</h1>
         {section === "asistente" && <Asistente s={props.s} set={props.set} />}
       </div>

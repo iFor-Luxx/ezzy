@@ -40,16 +40,16 @@ export default function App() {
     <>
       <header className="ez-topbar">
         <div className="mx-auto flex max-w-6xl items-center gap-3 px-5 py-3">
-          <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#1d1d1f] text-[17px] font-bold text-white">e</div>
+          <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-(--ez-ink) text-[17px] font-bold text-white">e</div>
           <div>
             <p className="text-[17px] font-semibold leading-tight tracking-tight">Ezzy</p>
-            <p className="text-xs leading-tight text-[#6e6e73]">Panel privado · tus datos quedan en este navegador</p>
+            <p className="text-xs leading-tight text-(--ez-muted)">Panel privado · tus datos quedan en este navegador</p>
           </div>
-          <span className="ml-auto hidden rounded-full bg-[#1a7f37]/10 px-3 py-1 text-xs font-medium text-[#1a7f37] sm:inline">local</span>
+          <span className="ml-auto hidden rounded-full bg-(--ez-ok)/10 px-3 py-1 text-xs font-medium text-(--ez-ok) sm:inline">local</span>
         </div>
       </header>
       <div className="mx-auto max-w-6xl px-5 py-5">
-        <nav className="ez-segment mb-5 flex gap-1 overflow-x-auto rounded-2xl bg-[#e8e8ed]/70 p-1" role="tablist" aria-label="Secciones">
+        <nav className="ez-segment mb-5 flex gap-1 overflow-x-auto rounded-2xl bg-muted/70 p-1" role="tablist" aria-label="Secciones">
           {TABS.map((t) => {
             const Icon = t.icon;
             const active = tab === t.id;
@@ -60,7 +60,7 @@ export default function App() {
                 aria-selected={active}
                 onClick={() => setTab(t.id)}
                 className={`flex items-center gap-1.5 whitespace-nowrap rounded-xl px-3.5 py-2 text-[13px] font-medium transition-all ${
-                  active ? "bg-white text-[#1d1d1f] shadow" : "text-[#6e6e73] hover:text-[#1d1d1f]"
+                  active ? "bg-card text-(--ez-ink) shadow" : "text-(--ez-muted) hover:text-(--ez-ink)"
                 }`}
               >
                 <Icon size={15} />
@@ -77,7 +77,7 @@ export default function App() {
           {tab === "sync" && <Sincronizacion s={s} set={set} />}
           {tab === "respaldo" && <Respaldo s={s} set={set} />}
         </main>
-        <p className="mt-6 text-center text-[13px] text-[#6e6e73]">
+        <p className="mt-6 text-center text-[13px] text-(--ez-muted)">
           Atajos de la extensión: Ctrl+Shift+Y selector · U/I/O favoritos. La extensión nunca envía sola.
         </p>
       </div>

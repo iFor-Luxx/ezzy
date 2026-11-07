@@ -66,20 +66,20 @@ export default function Respaldo(props: { s: WebState; set: React.Dispatch<React
               }
               return [...groups.entries()].map(([day, rows]) => (
                 <div key={day} className="mb-3 last:mb-0">
-                  <p className="mb-1 text-xs font-medium text-[#6e6e73]">{day}</p>
-                  <div className="overflow-hidden rounded-xl border border-[#e8e8ed]">
+                  <p className="mb-1 text-xs font-medium text-(--ez-muted)">{day}</p>
+                  <div className="overflow-hidden rounded-xl border border-border">
                     {rows.map((a) => {
                       const meta = actionMeta(a.action);
                       const Icon = meta.Icon;
                       return (
-                        <div key={a.id} className="flex items-center gap-3 border-t border-[#f0f0f3] px-3 py-2 first:border-t-0">
-                          <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-[#f5f5f7] text-[#6e6e73]">
+                        <div key={a.id} className="flex items-center gap-3 border-t border-border px-3 py-2 first:border-t-0">
+                          <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-muted text-(--ez-muted)">
                             <Icon size={14} />
                           </span>
                           <div className="min-w-0 flex-1">
-                            <p className="truncate text-[13px] font-medium">{meta.label} · <span className="font-normal text-[#6e6e73]">{a.detail}</span></p>
+                            <p className="truncate text-[13px] font-medium">{meta.label} · <span className="font-normal text-(--ez-muted)">{a.detail}</span></p>
                           </div>
-                          <span className="mono shrink-0 text-xs text-[#6e6e73]">{fmtTime(a.ts)}</span>
+                          <span className="mono shrink-0 text-xs text-(--ez-muted)">{fmtTime(a.ts)}</span>
                         </div>
                       );
                     })}
@@ -89,7 +89,7 @@ export default function Respaldo(props: { s: WebState; set: React.Dispatch<React
             })()}
           </div>
         )}
-        <p className="mt-2 text-[13px] text-[#6e6e73]">Incidente: olvida la key, pausa el sync, desconecta el equipo, limpia temporales, exporta este registro redactado.</p>
+        <p className="mt-2 text-[13px] text-(--ez-muted)">Incidente: olvida la key, pausa el sync, desconecta el equipo, limpia temporales, exporta este registro redactado.</p>
       </Card>
     </div>
   );

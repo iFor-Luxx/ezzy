@@ -38,7 +38,7 @@ export default function Contexto(props: { s: WebState; set: React.Dispatch<React
       <Card title="Vista previa anonimizada" sub="Edítala antes de usarla como contexto.">
         {prev ? <p className="ez-pre">{prev}</p> : <Empty>Sin vista previa.</Empty>}
         <Field label="Imagen" htmlFor="cx-img">
-          <div className="flex items-center gap-2 rounded-xl border border-dashed border-[#d2d2d7] p-3 text-[13px] text-[#6e6e73]">
+          <div className="flex items-center gap-2 rounded-xl border border-dashed border-border p-3 text-[13px] text-(--ez-muted)">
             <ImageOff size={15} /> Bloqueada en esta versión
           </div>
           <Input id="cx-img" type="file" accept="image/*" className="hidden" aria-label="Imagen bloqueada"

@@ -184,22 +184,22 @@ export default function Catalogo(props: { s: WebState; set: React.Dispatch<React
               <div className="relative">
                 <Input id="c-fabric" value={fabric} onChange={(e) => setFabric(e.target.value)} className="pr-11" />
                 <button type="button" aria-label="Mejorar con IA" title="Mejorar con IA" onClick={() => void mejorar()} disabled={aiBusy}
-                  className="absolute right-1.5 top-1/2 flex h-7 w-7 -translate-y-1/2 items-center justify-center rounded-full text-[#007aff] transition active:scale-95 hover:bg-black/[0.04] disabled:opacity-50">
+                  className="absolute right-1.5 top-1/2 flex h-7 w-7 -translate-y-1/2 items-center justify-center rounded-full text-(--ez-accent) transition active:scale-95 hover:bg-muted disabled:opacity-50">
                   <Sparkles size={16} />
                 </button>
               </div>
             </Field>
             <div>
-              <p className="mb-1 px-1 text-xs font-medium uppercase tracking-wide text-[#6e6e73]">Precios por cantidad</p>
-              <div className="overflow-hidden rounded-xl border border-[#e8e8ed]">
+              <p className="mb-1 px-1 text-xs font-medium uppercase tracking-wide text-(--ez-muted)">Precios por cantidad</p>
+              <div className="overflow-hidden rounded-xl border border-border">
                 {tiers.map((t, i) => (
-                  <div key={i} className="flex items-center justify-between gap-3 border-t border-[#f0f0f3] px-4 py-1.5 first:border-t-0">
+                  <div key={i} className="flex items-center justify-between gap-3 border-t border-border px-4 py-1.5 first:border-t-0">
                     <span className="text-[15px]">Lleva {t.qty || "…"}</span>
                     <span className="flex items-center gap-1 text-[15px]">
                       S/
                       <input id={`c-s${i}`} value={t.soles} onChange={(e) => setTier(i, { soles: e.target.value })}
                         inputMode="decimal" aria-label={`Precio llevando ${t.qty || i + 1}`}
-                        className="w-24 border-0 bg-transparent p-1 text-right outline-none placeholder:text-[#c7c7cc]" />
+                        className="w-24 border-0 bg-transparent p-1 text-right outline-none placeholder:text-muted-foreground" />
                     </span>
                   </div>
                 ))}
@@ -218,31 +218,31 @@ export default function Catalogo(props: { s: WebState; set: React.Dispatch<React
                 const min = prices.length ? Math.min(...prices.map((x) => x.amount_minor)) : null;
                 const cur0 = prices[0]?.currency ?? "PEN";
                 return (
-                  <details key={p.id} className="rounded-2xl border border-[#e8e8ed] p-4" open={false}>
+                  <details key={p.id} className="rounded-2xl border border-border p-4" open={false}>
                     <summary className="flex cursor-pointer list-none items-center justify-between gap-2">
                       <span className="min-w-0">
                         <strong className="block truncate tracking-tight">{p.name}</strong>
-                        {p.fabric ? <span className="block truncate text-[13px] font-normal text-[#6e6e73]">{p.fabric}</span> : null}
+                        {p.fabric ? <span className="block truncate text-[13px] font-normal text-(--ez-muted)">{p.fabric}</span> : null}
                       </span>
                       <span className="flex items-center gap-2">
                         {min !== null ? <Badge tone="ok">desde {formatMoney(min, cur0)}</Badge> : <Badge>sin precios</Badge>}
-                        <Pencil size={14} className="cursor-pointer text-[#6e6e73]" aria-label={`Editar ${p.name}`} onClick={(e) => { e.preventDefault(); if (editingId === p.id) setEditingId(null); else startEdit(p.id); }} />
-                        <Archive size={14} className="cursor-pointer text-[#6e6e73]" onClick={(e) => { e.preventDefault(); archive(p.id); }} />
+                        <Pencil size={14} className="cursor-pointer text-(--ez-muted)" aria-label={`Editar ${p.name}`} onClick={(e) => { e.preventDefault(); if (editingId === p.id) setEditingId(null); else startEdit(p.id); }} />
+                        <Archive size={14} className="cursor-pointer text-(--ez-muted)" onClick={(e) => { e.preventDefault(); archive(p.id); }} />
                       </span>
                     </summary>
                     {editingId === p.id ? (
-                      <div className="mt-3 grid gap-3 border-t border-[#f0f0f3] pt-3">
+                      <div className="mt-3 grid gap-3 border-t border-border pt-3">
                         <Field label="Nombre" htmlFor={`e-name-${p.id}`}><Input id={`e-name-${p.id}`} value={eName} onChange={(e) => setEName(e.target.value)} /></Field>
                         <Field label="Tela" htmlFor={`e-fabric-${p.id}`}><Input id={`e-fabric-${p.id}`} value={eFabric} onChange={(e) => setEFabric(e.target.value)} /></Field>
-                        <div className="overflow-hidden rounded-xl border border-[#e8e8ed]">
+                        <div className="overflow-hidden rounded-xl border border-border">
                           {eRows.filter((r) => !r.del).map((r) => (
-                            <div key={r.key} className="flex items-center gap-2 border-t border-[#f0f0f3] px-3 py-1.5 first:border-t-0">
+                            <div key={r.key} className="flex items-center gap-2 border-t border-border px-3 py-1.5 first:border-t-0">
                               <span className="w-16 shrink-0 text-[15px]">×<input value={r.qty} onChange={(e) => setERows((rows) => rows.map((x) => (x.key === r.key ? { ...x, qty: e.target.value } : x)))} inputMode="numeric" aria-label="Cantidad" className="w-10 border-0 bg-transparent p-1 outline-none" /></span>
                               <span className="flex flex-1 items-center justify-end gap-1 text-[15px]">
                                 S/
                                 <input value={r.soles} onChange={(e) => setERows((rows) => rows.map((x) => (x.key === r.key ? { ...x, soles: e.target.value } : x)))} inputMode="decimal" aria-label="Precio" className="w-24 border-0 bg-transparent p-1 text-right outline-none" />
                               </span>
-                              <Trash2 size={14} className="shrink-0 cursor-pointer text-[#cf222e]" aria-label="Quitar precio" onClick={() => setERows((rows) => rows.map((x) => (x.key === r.key ? { ...x, del: true } : x)))} />
+                              <Trash2 size={14} className="shrink-0 cursor-pointer text-destructive" aria-label="Quitar precio" onClick={() => setERows((rows) => rows.map((x) => (x.key === r.key ? { ...x, del: true } : x)))} />
                             </div>
                           ))}
                         </div>
@@ -255,7 +255,7 @@ export default function Catalogo(props: { s: WebState; set: React.Dispatch<React
                         </div>
                       </div>
                     ) : prices.length === 0 ? (
-                      <p className="mt-2 text-[13px] text-[#6e6e73]">Sin precios.</p>
+                      <p className="mt-2 text-[13px] text-(--ez-muted)">Sin precios.</p>
                     ) : (
                       <table className="mt-2 w-full border-collapse text-sm">
                         <tbody>
@@ -263,8 +263,8 @@ export default function Catalogo(props: { s: WebState; set: React.Dispatch<React
                             .map((pr) => ({ pr, qty: pr.variant_id ? s.variants.find((v) => v.id === pr.variant_id)?.label ?? "" : "" }))
                             .sort((a, b) => (a.qty && b.qty ? a.qty.localeCompare(b.qty, undefined, { numeric: true }) : 0))
                             .map(({ pr, qty }) => (
-                              <tr key={pr.id} className="border-t border-[#f0f0f3]">
-                                <td className="py-1.5 text-[#6e6e73]">{qty ? `Lleva ${prettyVariant(qty)}` : "Precio general"}</td>
+                              <tr key={pr.id} className="border-t border-border">
+                                <td className="py-1.5 text-(--ez-muted)">{qty ? `Lleva ${prettyVariant(qty)}` : "Precio general"}</td>
                                 <td className="py-1.5 text-right font-semibold">{formatMoney(pr.amount_minor, pr.currency)}</td>
                               </tr>
                             ))}

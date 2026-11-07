@@ -7,6 +7,7 @@ import SkyGradient from "../components/SkyGradient";
 import { enrollPin, getInstallationId, getWorkerUrl } from "../lib/auth";
 
 // Pantalla 1 · Acceso único de Lux: PIN de 4–6 dígitos verificado/creado en tu servidor.
+// La URL del Worker ya viene fija en DEFAULT_WORKER_URL, no hay que recordarla.
 export default function Login(props: { onAuthed: () => void }) {
   const [pin, setPin] = React.useState("");
   const [busy, setBusy] = React.useState(false);
@@ -14,10 +15,6 @@ export default function Login(props: { onAuthed: () => void }) {
   async function entrar(e: React.FormEvent): Promise<void> {
     e.preventDefault();
     const base = getWorkerUrl().trim().replace(/\/+$/, "");
-    if (!base.startsWith("https://")) {
-      toast.add({ title: "Error", description: "Sin Worker guardado: entra una vez con la URL y quedará recordada." });
-      return;
-    }
     if (!/^\d{4,6}$/.test(pin)) {
       toast.add({ title: "Error", description: "PIN de 4 a 6 dígitos." });
       return;

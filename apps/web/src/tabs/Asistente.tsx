@@ -159,11 +159,11 @@ export default function Asistente(_props: { s: WebState; set: React.Dispatch<Rea
                   </SelectContent>
                 </Select>
               ) : (
-                <p className="text-[13px] text-[#6e6e73]">{loadingModels ? "Consultando modelos…" : "Pega tu API key para cargar los modelos."}</p>
+                <p className="text-[13px] text-(--ez-muted)">{loadingModels ? "Consultando modelos…" : "Pega tu API key para cargar los modelos."}</p>
               )}
             </div>
             <div className="flex justify-end gap-2">
-              <Button variant="ghost" className="text-[#007aff]" onClick={() => void probar()} disabled={busy}>Test</Button>
+              <Button variant="ghost" className="text-(--ez-accent)" onClick={() => void probar()} disabled={busy}>Test</Button>
               <Button onClick={saveKey} disabled={busy}>Guardar</Button>
             </div>
           </div>

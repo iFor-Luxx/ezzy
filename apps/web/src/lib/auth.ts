@@ -1,4 +1,4 @@
-import { WORKER_KEY } from "./cloud";
+import { DEFAULT_WORKER_URL, WORKER_KEY } from "./cloud";
 
 // Sesión única del propietario (Lux). El PIN nunca se guarda:
 // solo vive en memoria y se verifica/crea contra el servidor.
@@ -19,9 +19,9 @@ export function getInstallationId(): string {
 
 export function getWorkerUrl(): string {
   try {
-    return localStorage.getItem(WORKER_KEY) ?? "";
+    return localStorage.getItem(WORKER_KEY) ?? DEFAULT_WORKER_URL;
   } catch {
-    return "";
+    return DEFAULT_WORKER_URL;
   }
 }
 

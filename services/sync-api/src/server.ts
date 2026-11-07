@@ -20,6 +20,26 @@ export interface StoredRecord {
   dto: Record<string, unknown> | null;
 }
 
+// Cursor base64url con APIs web estándar (compatible Workers sin nodejs_compat).
+function encodeCursor(i: number): string {
+  const bytes = new TextEncoder().encode(JSON.stringify({ i, v: 1 }));
+  let bin = "";
+  for (const b of bytes) bin += String.fromCharCode(b);
+  return btoa(bin).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
+}
+
+function decodeCursor(cursor: string): number {
+  try {
+    const b64 = cursor.replace(/-/g, "+").replace(/_/g, "/");
+    const bin = atob(b64);
+    const bytes = Uint8Array.from(bin, (c) => c.charCodeAt(0));
+    const o = JSON.parse(new TextDecoder().decode(bytes)) as { i?: unknown };
+    return typeof o.i === "number" && o.i >= 0 ? Math.floor(o.i) : 0;
+  } catch {
+    return 0;
+  }
+}
+
 export class SyncServer {
   data = new Map<string, Rec>();
   seenKeys = new Set<string>();
@@ -119,11 +139,7 @@ export class SyncServer {
     this.used.reads += 1;
     let idx = 0;
     if (cursor) {
-      try {
-        idx = JSON.parse(Buffer.from(cursor, "base64url").toString("utf8")).i ?? 0;
-      } catch {
-        idx = 0;
-      }
+      idx = decodeCursor(cursor);
     }
     void idx;
     // Piloto: devuelve estado actual completo (cursor = tamaño log).
@@ -131,7 +147,7 @@ export class SyncServer {
       const [entity_type, entity_id] = k.split(":");
       return { entity_type, entity_id, revision: v.revision, deleted: v.deleted };
     });
-    const next = Buffer.from(JSON.stringify({ i: this.log.length, v: 1 })).toString("base64url");
+    const next = encodeCursor(this.log.length);
     return { cursor: next, changes };
   }
 }

@@ -11,11 +11,11 @@ const buttonVariants = cva(
   {
     variants: {
       variant: {
-        default: "bg-[#007aff] text-white active:brightness-95",
-        secondary: "bg-[#e9e9ee] text-[#1d1d1f] hover:bg-[#e0e0e6]",
-        outline: "border border-black/10 bg-white hover:bg-black/[0.02]",
-        ghost: "hover:bg-black/[0.04]",
-        destructive: "bg-[#ff3b30] text-white active:brightness-95",
+        default: "bg-(--ez-accent) text-white active:brightness-95",
+        secondary: "bg-secondary text-(--ez-ink) hover:bg-muted",
+        outline: "border border-border bg-card hover:bg-muted",
+        ghost: "hover:bg-muted",
+        destructive: "bg-destructive text-white active:brightness-95",
       },
       size: {
         default: "h-9 px-4",
@@ -39,13 +39,13 @@ export function Card(props: { title?: string; sub?: string; icon?: React.ReactNo
       {(props.title || props.action) && (
         <div className="mb-1 flex items-start justify-between gap-3">
           <div className="flex items-center gap-2">
-            {props.icon ? <span className="text-[#007aff]">{props.icon}</span> : null}
+            {props.icon ? <span className="text-(--ez-accent)">{props.icon}</span> : null}
             {props.title ? <h2 className="text-[17px] font-semibold tracking-tight">{props.title}</h2> : null}
           </div>
           {props.action}
         </div>
       )}
-      {props.sub ? <p className="mb-3 text-[13px] text-[#6e6e73]">{props.sub}</p> : null}
+      {props.sub ? <p className="mb-3 text-[13px] text-(--ez-muted)">{props.sub}</p> : null}
       {props.children}
     </section>
   );
@@ -56,7 +56,7 @@ export function Field(props: { label: string; htmlFor: string; hint?: string; ch
     <div className="grid gap-1.5">
       <label htmlFor={props.htmlFor} className="text-[13px] font-medium">{props.label}</label>
       {props.children}
-      {props.hint ? <p className="text-xs text-[#6e6e73]">{props.hint}</p> : null}
+      {props.hint ? <p className="text-xs text-(--ez-muted)">{props.hint}</p> : null}
     </div>
   );
 }
@@ -67,7 +67,7 @@ export function Input(props: React.InputHTMLAttributes<HTMLInputElement>) {
       autoComplete="off"
       {...props}
       className={cn(
-        "flex h-10 w-full rounded-xl border border-transparent bg-[#f2f2f7] px-3 text-sm placeholder:text-[#86868b] focus:border-[#007aff] focus:bg-white",
+        "flex h-10 w-full rounded-xl border border-transparent bg-(--ez-bg) px-3 text-sm placeholder:text-muted-foreground focus:border-(--ez-accent) focus:bg-card",
         props.className
       )}
     />
@@ -80,7 +80,7 @@ export function Textarea(props: React.TextareaHTMLAttributes<HTMLTextAreaElement
       autoComplete="off"
       {...props}
       className={cn(
-        "flex min-h-[88px] w-full rounded-xl border border-transparent bg-[#f2f2f7] px-3 py-2 text-sm placeholder:text-[#86868b] focus:border-[#007aff] focus:bg-white",
+        "flex min-h-[88px] w-full rounded-xl border border-transparent bg-(--ez-bg) px-3 py-2 text-sm placeholder:text-muted-foreground focus:border-(--ez-accent) focus:bg-card",
         props.className
       )}
     />
@@ -95,13 +95,13 @@ export function SelectTrigger(props: React.ComponentPropsWithoutRef<typeof Selec
     <SelectPrimitive.Trigger
       {...props}
       className={cn(
-        "flex h-10 w-full items-center justify-between rounded-xl border border-transparent bg-[#f2f2f7] px-3 text-sm focus:border-[#007aff] focus:bg-white [&>span]:truncate",
+        "flex h-10 w-full items-center justify-between rounded-xl border border-transparent bg-(--ez-bg) px-3 text-sm focus:border-(--ez-accent) focus:bg-card [&>span]:truncate",
         props.className
       )}
     >
       <SelectPrimitive.Value />
       <SelectPrimitive.Icon asChild>
-        <ChevronDown size={15} className="shrink-0 text-[#86868b]" />
+        <ChevronDown size={15} className="shrink-0 text-muted-foreground" />
       </SelectPrimitive.Icon>
     </SelectPrimitive.Trigger>
   );
@@ -115,7 +115,7 @@ export function SelectContent(props: React.ComponentPropsWithoutRef<typeof Selec
         position="popper"
         sideOffset={6}
         className={cn(
-          "z-50 max-h-64 min-w-[10rem] overflow-auto rounded-2xl border border-black/[0.06] bg-white p-1.5 shadow-[0_8px_30px_rgba(0,0,0,0.12)]",
+          "z-50 max-h-64 min-w-[10rem] overflow-auto rounded-2xl border border-black/[0.06] bg-card p-1.5 shadow-[0_8px_30px] shadow-black/10",
           props.className
         )}
       >
@@ -130,7 +130,7 @@ export function SelectItem(props: React.ComponentPropsWithoutRef<typeof SelectPr
     <SelectPrimitive.Item
       {...props}
       className={cn(
-        "relative flex cursor-pointer select-none items-center rounded-xl py-2 pl-8 pr-3 text-sm outline-none focus:bg-[#f5f5f7] data-[state=checked]:font-medium",
+        "relative flex cursor-pointer select-none items-center rounded-xl py-2 pl-8 pr-3 text-sm outline-none focus:bg-muted data-[state=checked]:font-medium",
         props.className
       )}
     >
@@ -149,11 +149,11 @@ const badgeVariants = cva(
   {
     variants: {
       tone: {
-        default: "border-[#e8e8ed] bg-[#f5f5f7] text-[#1d1d1f]",
-        ok: "border-[#1a7f37]/30 bg-[#1a7f37]/10 text-[#1a7f37]",
-        warn: "border-[#9a6700]/30 bg-[#9a6700]/10 text-[#9a6700]",
-        bad: "border-[#cf222e]/30 bg-[#cf222e]/10 text-[#cf222e]",
-        info: "border-[#007aff]/30 bg-[#007aff]/10 text-[#007aff]",
+        default: "border-border bg-muted text-(--ez-ink)",
+        ok: "border-(--ez-ok)/30 bg-(--ez-ok)/10 text-(--ez-ok)",
+        warn: "border-(--ez-warn)/30 bg-(--ez-warn)/10 text-(--ez-warn)",
+        bad: "border-destructive/30 bg-destructive/10 text-destructive",
+        info: "border-(--ez-accent)/30 bg-(--ez-accent)/10 text-(--ez-accent)",
       },
     },
     defaultVariants: { tone: "default" },
@@ -165,13 +165,13 @@ export function Badge(props: { tone?: "default" | "ok" | "warn" | "bad" | "info"
 }
 
 export function Empty(props: { children: React.ReactNode }) {
-  return <p className="py-4 text-center text-[13px] text-[#6e6e73]">{props.children}</p>;
+  return <p className="py-4 text-center text-[13px] text-(--ez-muted)">{props.children}</p>;
 }
 
 export function Stat(props: { label: string; value: string }) {
   return (
     <div className="ez-card px-4 py-3">
-      <p className="text-xs text-[#6e6e73]">{props.label}</p>
+      <p className="text-xs text-(--ez-muted)">{props.label}</p>
       <p className="text-xl font-semibold tracking-tight">{props.value}</p>
     </div>
   );
@@ -187,7 +187,7 @@ export function Dialog(props: { title: string; children: React.ReactNode; onClos
     >
       <DialogPrimitive.Portal>
         <DialogPrimitive.Overlay className="fixed inset-0 z-30 bg-black/30 backdrop-blur-sm" />
-        <DialogPrimitive.Content className="fixed left-1/2 top-1/2 z-30 max-h-[85vh] w-full max-w-xl -translate-x-1/2 -translate-y-1/2 overflow-auto rounded-2xl border border-black/[0.06] bg-white p-6 shadow-[0_8px_30px_rgba(0,0,0,0.12)]">
+        <DialogPrimitive.Content className="fixed left-1/2 top-1/2 z-30 max-h-[85vh] w-full max-w-xl -translate-x-1/2 -translate-y-1/2 overflow-auto rounded-2xl border border-black/[0.06] bg-card p-6 shadow-[0_8px_30px] shadow-black/10">
           <DialogPrimitive.Title className="mb-3 text-lg font-semibold tracking-tight">{props.title}</DialogPrimitive.Title>
           {props.children}
         </DialogPrimitive.Content>

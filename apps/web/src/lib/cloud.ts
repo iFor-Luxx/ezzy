@@ -14,6 +14,8 @@ export interface CloudStatusView {
 
 export const WORKER_KEY = "ezzy.web.worker";
 export const STATUS_KEY = "ezzy.web.cloudStatus";
+// URL fija de tu Worker ya desplegado. Evita tener que recordarla/pegarla.
+export const DEFAULT_WORKER_URL = "https://ezzy-sync.ifor-dev.workers.dev";
 
 function num(v: unknown): number {
   return typeof v === "number" && Number.isFinite(v) && v >= 0 ? v : NaN;

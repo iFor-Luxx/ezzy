@@ -2,21 +2,21 @@ import React from "react";
 import { ArrowLeftRight, CloudSun, Upload, Download, RefreshCw } from "lucide-react";
 import { Button, Card, Field, Input, Badge } from "../components/ui";
 import { buildBridge, parseBridge, audit, type WebState } from "../lib/store";
-import { parseStatus, pct, barTone, WORKER_KEY, STATUS_KEY, type CloudStatusView } from "../lib/cloud";
+import { parseStatus, pct, barTone, WORKER_KEY, STATUS_KEY, DEFAULT_WORKER_URL, type CloudStatusView } from "../lib/cloud";
 import ExplorerNube from "./ExplorerNube";
 import { toast } from "../components/ui/toast";
 
 function Bar(props: { label: string; used: number; cap: number; unit: string }) {
   const p = pct(props.used, props.cap);
   const tone = barTone(p);
-  const color = tone === "ok" ? "bg-[#1a7f37]" : tone === "warn" ? "bg-[#9a6700]" : "bg-[#cf222e]";
+  const color = tone === "ok" ? "bg-(--ez-ok)" : tone === "warn" ? "bg-(--ez-warn)" : "bg-destructive";
   return (
     <div className="grid gap-1">
       <div className="flex items-baseline justify-between text-[13px]">
-        <span className="text-[#6e6e73]">{props.label}</span>
+        <span className="text-(--ez-muted)">{props.label}</span>
         <span className="mono text-xs">{props.used.toLocaleString("es-PE")} / {props.cap.toLocaleString("es-PE")} {props.unit} · {p.toFixed(1)}%</span>
       </div>
-      <div className="h-2 overflow-hidden rounded-full bg-[#e8e8ed]">
+      <div className="h-2 overflow-hidden rounded-full bg-muted">
         <div className={`h-full rounded-full ${color}`} style={{ width: `${Math.max(p, 2)}%` }} />
       </div>
     </div>
@@ -29,9 +29,9 @@ export default function Sincronizacion(props: { s: WebState; set: React.Dispatch
   const { s, set } = props;
   const [workerUrl, setWorkerUrl] = React.useState(() => {
     try {
-      return localStorage.getItem(WORKER_KEY) ?? "";
+      return localStorage.getItem(WORKER_KEY) ?? DEFAULT_WORKER_URL;
     } catch {
-      return "";
+      return DEFAULT_WORKER_URL;
     }
   });
   const [cloud, setCloud] = React.useState<CloudStatusView | null>(() => {
@@ -122,7 +122,7 @@ export default function Sincronizacion(props: { s: WebState; set: React.Dispatch
           </Field>
           {cloud ? (
             <>
-              <p className="text-[13px] text-[#6e6e73]">
+              <p className="text-[13px] text-(--ez-muted)">
                 Plan {cloud.plan}{cloud.planVerifiedAt ? ` · verificado ${cloud.planVerifiedAt.slice(0, 10)}` : " · sin verificar"} ·{" "}
                 {cloud.entities} entidades · {cloud.installations} instalaciones ·{" "}
                 <span className="mono text-xs">{cloud.ts.slice(0, 19).replace("T", " ")}</span>
@@ -137,7 +137,7 @@ export default function Sincronizacion(props: { s: WebState; set: React.Dispatch
       <Card title="Puente con la extensión" icon={<ArrowLeftRight size={18} />}>
         <div className="flex flex-wrap gap-2">
           <Button onClick={download}><Download size={15} /> Exportar puente JSON</Button>
-          <label className="inline-flex h-9 cursor-pointer items-center gap-2 rounded-full bg-[#e8e8ed] px-4 text-sm font-medium hover:bg-[#d2d2d7]" htmlFor="br-file">
+          <label className="inline-flex h-9 cursor-pointer items-center gap-2 rounded-full bg-muted px-4 text-sm font-medium hover:bg-muted" htmlFor="br-file">
             <Upload size={15} /> Importar puente
           </label>
           <input id="br-file" type="file" accept="application/json" className="hidden" onChange={upload} />
