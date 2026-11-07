@@ -6,15 +6,21 @@ import { toast } from "../components/ui/toast";
 import SkyGradient from "../components/SkyGradient";
 import { enrollPin, getInstallationId, getWorkerUrl } from "../lib/auth";
 
-// Pantalla 1 · Acceso único de Lux: PIN de 4–6 dígitos verificado/creado en tu servidor.
-// La URL del Worker ya viene fija en DEFAULT_WORKER_URL, no hay que recordarla.
+// Pantalla 1 · Acceso único: PIN de 4–6 dígitos. La URL viene de VITE_WORKER_URL
+// o del primer ingreso manual (queda en localStorage). Nada fijo en el repo.
 export default function Login(props: { onAuthed: () => void }) {
   const [pin, setPin] = React.useState("");
+  const [workerUrl, setWorkerUrl] = React.useState(getWorkerUrl);
   const [busy, setBusy] = React.useState(false);
+  const needUrl = !workerUrl.trim().startsWith("https://");
 
   async function entrar(e: React.FormEvent): Promise<void> {
     e.preventDefault();
-    const base = getWorkerUrl().trim().replace(/\/+$/, "");
+    const base = workerUrl.trim().replace(/\/+$/, "");
+    if (!base.startsWith("https://")) {
+      toast.add({ title: "Error", description: "Pega una vez la URL https de tu Worker, quedará guardada en este navegador." });
+      return;
+    }
     if (!/^\d{4,6}$/.test(pin)) {
       toast.add({ title: "Error", description: "PIN de 4 a 6 dígitos." });
       return;
@@ -41,6 +47,19 @@ export default function Login(props: { onAuthed: () => void }) {
         </CardHeader>
         <CardContent>
           <form onSubmit={(e) => void entrar(e)} className="grid gap-4">
+            {needUrl ? (
+              <label className="grid gap-1 text-left text-[13px] text-[#6e6e73]">
+                URL del Worker (solo primera vez)
+                <input
+                  value={workerUrl}
+                  onChange={(e) => setWorkerUrl(e.target.value)}
+                  inputMode="url"
+                  placeholder="https://tu-worker.workers.dev"
+                  aria-label="URL del Worker"
+                  className="h-10 rounded-xl border border-black/10 bg-white/80 px-3 text-sm text-black outline-none"
+                />
+              </label>
+            ) : null}
             <div className="flex justify-center">
               <InputOTP maxLength={6} value={pin} onChange={setPin} inputMode="numeric" aria-label="PIN">
                 <InputOTPGroup className="gap-2">

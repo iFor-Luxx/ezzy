@@ -1,11 +1,10 @@
-# Piloto: el Worker corre en memoria (se pierde al reiniciar).
-# Prod: agregar binding D1 y persistir data/auth (pendiente Fase 5 prod).
+# Auth persistente en D1 (gratis): el PIN sobrevive reinicios del Worker.
+# Datos sync aún en memoria por isolate (piloto).
 name = "ezzy-sync"
 main = "src/worker.ts"
 compatibility_date = "2026-11-07"
 
-# Descomenta al crear la D1 en tu cuenta (gratis, ver docs/fase-0):
-# [[d1_databases]]
-# binding = "EZZY_DB"
-# database_name = "ezzy-sync"
-# database_id = "PON-EL-ID-DE-TU-D1"
+[[d1_databases]]
+binding = "EZZY_DB"
+database_name = "ezzy-sync"
+database_id = "b89dc411-87dc-4502-a276-3e4023377b4f"

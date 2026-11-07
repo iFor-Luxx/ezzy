@@ -3,7 +3,7 @@
 import { toSyncDto, checkBatchSize, SCHEMA_VERSION } from "@ezzy/contracts";
 import { evalQuota, FREE_CAPS } from "./quota_guard";
 import { warnRatio, type CloudStatus } from "./status";
-import type { AuthStore } from "./auth";
+import type { AuthPort } from "./auth";
 import { detectSyncConflict } from "@ezzy/sync-client";
 
 interface Rec {
@@ -44,14 +44,14 @@ export class SyncServer {
   data = new Map<string, Rec>();
   seenKeys = new Set<string>();
   log: { key: string; index: number }[] = [];
-  auth: AuthStore;
+  auth: AuthPort;
   quotaKnown = true;
   used = { req: 0, reads: 0, writes: 0 };
   /** Plan declarado al desplegar + fecha de verificación manual. Sin esto, el panel lo muestra "sin verificar". */
   plan: "free" = "free";
   planVerifiedAt: string | null = null;
 
-  constructor(auth: AuthStore) {
+  constructor(auth: AuthPort) {
     this.auth = auth;
   }
 
@@ -60,7 +60,7 @@ export class SyncServer {
   }
 
   /** Estado para el panel: uso vs topes, cuota y conteos. Sin secretos. */
-  status(): CloudStatus {
+  async status(): Promise<CloudStatus> {
     const q = evalQuota(this.used, this.quotaKnown);
     return {
       schemaVersion: 1,
@@ -71,7 +71,7 @@ export class SyncServer {
       caps: { ...FREE_CAPS },
       quota: { warnRatio: warnRatio(this.used), blocked: !q.allow, code: q.code },
       entities: this.data.size,
-      installations: [...this.auth.installations.values()].filter((i) => i.enabled).length,
+      installations: await this.auth.enabledCount(),
     };
   }
 
@@ -79,13 +79,13 @@ export class SyncServer {
     return `${t}:${id}`;
   }
 
-  push(input: {
+  async push(input: {
     installationId: string;
     schemaVersion: number;
     changes: { idempotencyKey: string; entity_type: string; entity_id: string; operation: "upsert" | "tombstone"; revision: number; base_revision: number; payload: Record<string, unknown> }[];
-  }): { applied: string[]; conflicts: { entity_type: string; entity_id: string }[]; error?: object } {
+  }): Promise<{ applied: string[]; conflicts: { entity_type: string; entity_id: string }[]; error?: object }> {
     this.used.req += 1;
-    if (!this.auth.isAuthorized(input.installationId))
+    if (!(await this.auth.isAuthorized(input.installationId)))
       return { applied: [], conflicts: [], error: { schemaVersion: 1, error: { code: "UNAUTHORIZED", message: "no enrolado o revocado", retryable: false } } };
     if (input.schemaVersion !== SCHEMA_VERSION)
       return { applied: [], conflicts: [], error: { schemaVersion: 1, error: { code: "UNSUPPORTED_SCHEMA", message: "schema no soportado", retryable: false } } };

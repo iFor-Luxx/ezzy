@@ -59,14 +59,14 @@ const auth = new AuthStore();
 await auth.bootstrap("secreto-piloto", "inst-a");
 await auth.enroll("inst-b", "secreto-piloto");
 const server = new SyncServer(auth);
-const push1 = server.push({ installationId: "inst-a", schemaVersion: 1, changes: [{ idempotencyKey: "k1", entity_type: "product", entity_id: "p1", operation: "upsert", revision: 1, base_revision: 0, payload: { id: "p1", name: "Polo" } }] });
+const push1 = await server.push({ installationId: "inst-a", schemaVersion: 1, changes: [{ idempotencyKey: "k1", entity_type: "product", entity_id: "p1", operation: "upsert", revision: 1, base_revision: 0, payload: { id: "p1", name: "Polo" } }] });
 if (push1.applied[0] !== "k1") throw new Error("push");
 const outbox = new Outbox();
 outbox.enqueue({ idempotencyKey: "k1", entity_type: "product", entity_id: "p1", operation: "upsert", revision: 1, base_revision: 0, payload: {} });
 outbox.enqueue({ idempotencyKey: "k1", entity_type: "product", entity_id: "p1", operation: "upsert", revision: 1, base_revision: 0, payload: {} });
 if (outbox.pending() !== 1) throw new Error("idempotencia");
 pass("10-sync-idempotente");
-const bad = server.push({ installationId: "nope", schemaVersion: 1, changes: [] });
+const bad = await server.push({ installationId: "nope", schemaVersion: 1, changes: [] });
 if (!bad.error) throw new Error("aislamiento");
 pass("8-aislamiento-enrolamiento");
 
