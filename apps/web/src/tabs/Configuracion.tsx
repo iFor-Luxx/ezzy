@@ -1,0 +1,42 @@
+import React from "react";
+import { Sparkles } from "lucide-react";
+import Asistente from "./Asistente";
+import type { WebState } from "../lib/store";
+
+// Ajustes estilo macOS: sidebar gris con iconos en mosaico + contenido blanco con título.
+// Para agregar una sección futura: añade su entrada aquí y su caso abajo.
+const SECTIONS = [{ id: "asistente", label: "Asistente IA", icon: Sparkles }] as const;
+
+export default function Configuracion(props: { s: WebState; set: React.Dispatch<React.SetStateAction<WebState>> }) {
+  const [section, setSection] = React.useState<string>("asistente");
+  const current = SECTIONS.find((x) => x.id === section) ?? SECTIONS[0];
+  return (
+    <div className="grid overflow-hidden rounded-2xl border border-[#e8e8ed] bg-white md:grid-cols-[240px_1fr]">
+      <aside aria-label="Ajustes" className="bg-[#f5f5f7]/80 p-2">
+        {SECTIONS.map((it) => {
+          const Icon = it.icon;
+          const active = section === it.id;
+          return (
+            <button
+              key={it.id}
+              onClick={() => setSection(it.id)}
+              aria-current={active ? "true" : undefined}
+              className={`flex w-full items-center gap-2.5 rounded-lg px-2.5 py-[7px] text-left text-[13px] transition ${
+                active ? "bg-black/[0.07]" : "hover:bg-black/[0.04]"
+              }`}
+            >
+              <span className="flex h-7 w-7 shrink-0 items-center justify-center text-[#6e6e73]">
+                <Icon size={17} />
+              </span>
+              {it.label}
+            </button>
+          );
+        })}
+      </aside>
+      <div className="min-w-0 border-t border-[#e8e8ed] p-5 md:border-l md:border-t-0">
+        <h1 className="mb-4 text-[19px] font-bold tracking-tight">{current.label}</h1>
+        {section === "asistente" && <Asistente s={props.s} set={props.set} />}
+      </div>
+    </div>
+  );
+}

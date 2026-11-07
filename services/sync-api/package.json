@@ -1,0 +1,12 @@
+{
+  "name": "@ezzy/sync-api",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "main": "./src/index.ts",
+  "scripts": { "test": "bun test ./src" },
+  "dependencies": {
+    "@ezzy/contracts": "workspace:*",
+    "@ezzy/sync-client": "workspace:*"
+  }
+}

@@ -1,0 +1,60 @@
+@import "tailwindcss";
+
+/* Ezzy · sistema Apple-like sobre shadcn (tokens + superficies; el layout usa Tailwind). */
+:root {
+  --ez-bg: #f5f5f7;
+  --ez-card: #ffffff;
+  --ez-ink: #1d1d1f;
+  --ez-muted: #6e6e73;
+  --ez-line: #e8e8ed;
+  --ez-accent: #0071e3;
+  --ez-ok: #1a7f37;
+  --ez-warn: #9a6700;
+  --ez-bad: #cf222e;
+}
+
+html {
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+body {
+  margin: 0;
+  background: var(--ez-bg);
+  color: var(--ez-ink);
+}
+
+.ez-topbar {
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  backdrop-filter: saturate(180%) blur(20px);
+  -webkit-backdrop-filter: saturate(180%) blur(20px);
+  background: rgba(251, 251, 253, 0.8);
+  border-bottom: 1px solid var(--ez-line);
+}
+
+.ez-card {
+  background: var(--ez-card);
+  border: 1px solid var(--ez-line);
+  border-radius: 18px;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+}
+
+.ez-pre {
+  white-space: pre-wrap;
+  background: #f5f5f7;
+  border: 1px solid var(--ez-line);
+  border-radius: 12px;
+  padding: 10px 12px;
+  font-size: 13.5px;
+}
+
+.ez-segment button:focus-visible,
+.ez-btn:focus-visible,
+input:focus-visible,
+textarea:focus-visible,
+select:focus-visible {
+  outline: 2px solid var(--ez-accent);
+  outline-offset: 2px;
+}

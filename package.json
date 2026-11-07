@@ -1,0 +1,24 @@
+{
+  "name": "ezzy",
+  "private": true,
+  "version": "0.1.0",
+  "description": "Ezzy — extensión Chrome MV3 privada, single-user, local-first (Fase 1: núcleo local)",
+  "workspaces": [
+    "apps/*",
+    "packages/*",
+    "services/*"
+  ],
+  "scripts": {
+    "test": "bun test ./packages/...",
+    "test:all": "bun test ./packages ./apps",
+    "typecheck": "bunx tsc --noEmit -p tsconfig.json",
+    "build:extension": "bun run --cwd apps/extension build",
+    "dev": "bun run --cwd apps/web dev",
+    "dev:web": "bun run --cwd apps/web dev",
+    "build:web": "bun run --cwd apps/web build"
+  },
+  "devDependencies": {
+    "bun-types": "^1.4.4",
+    "typescript": "^5.6.3"
+  }
+}

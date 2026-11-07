@@ -1,0 +1,14 @@
+{
+  "name": "@ezzy/extension",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "bunx tsc --noEmit -p tsconfig.json && node ./scripts/build.mjs",
+    "test": "bun test ./src"
+  },
+  "dependencies": {
+    "@ezzy/ai-opencode": "workspace:*",
+    "@ezzy/domain": "workspace:*"
+  }
+}

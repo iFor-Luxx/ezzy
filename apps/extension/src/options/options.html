@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="es">
+<head><meta charset="utf-8"><title>Ezzy — opciones</title><style>body{font-family:system-ui;max-width:900px;margin:auto;padding:16px}section{border:1px solid #ddd;padding:12px;margin:12px 0}input,textarea{width:100%;margin:4px 0;padding:6px}button{padding:6px 12px;margin:4px}:focus-visible{outline:2px solid #000}</style></head>
+<body>
+<h1>Ezzy — catálogo y mensajes (offline)</h1>
+<section aria-label="Producto"><h2>Producto</h2><label for="p-name">Nombre</label><input id="p-name" placeholder="Nombre" aria-label="Nombre producto"><label for="p-price">Precio minor</label><input id="p-price" placeholder="Precio minor (ej 4990)" aria-label="Precio en minor"><label for="p-cur">Moneda</label><input id="p-cur" placeholder="PEN" value="PEN" aria-label="Moneda ISO"><button id="p-add">Guardar producto</button></section>
+<section aria-label="Mensaje aprobado"><h2>Mensaje aprobado</h2><label for="m-title">Título</label><input id="m-title" placeholder="Título" aria-label="Título mensaje"><label for="m-body">Cuerpo</label><textarea id="m-body" placeholder="Hola {{nombre}}" aria-label="Cuerpo mensaje"></textarea><button id="m-add">Guardar mensaje</button></section>
+<section aria-label="Backup local"><h2>Backup local</h2><button id="b-exp">Exportar</button><label for="b-file">Archivo de respaldo</label><input id="b-file" type="file" accept="application/json" aria-label="Archivo de respaldo"><button id="b-imp">Restaurar</button><p><small>Medios e imágenes permanecen locales y no se exportan a la nube.</small></p></section>
+<section aria-label="Asistente IA"><h2>Asistente IA (Fase 2 — controlado)</h2>
+<p><small>Key solo sesión (se borra al cerrar). Nunca en logs ni sync. Modelos paid, texto-solo.</small></p>
+<label for="ai-key">API key (sesión)</label><input id="ai-key" type="password" placeholder="oc_sk_…" autocomplete="off" aria-label="API key OpenCode sesión"><button id="ai-forget">Olvidar</button>
+<label for="ai-model">Modelo</label><input id="ai-model" placeholder="modelo" value="glm-5.3-flash" aria-label="Modelo">
+<label for="ai-ctx">Contexto</label><textarea id="ai-ctx" placeholder="Contexto opcional pegado por ti (editable, sin PII)" aria-label="Contexto opcional"></textarea>
+<button id="ai-gen">1) Previsualizar envío</button>
+<div id="ai-consent" style="border:1px dashed #888;padding:8px;margin:8px 0;white-space:pre-wrap"></div>
+<button id="ai-confirm">2) Confirmar y generar</button>
+<div id="ai-draft" style="white-space:pre-wrap;border:1px solid #888;padding:8px;margin:8px 0"></div>
+<div id="ai-src" style="white-space:pre-wrap"></div>
+<button id="ai-copy">Copiar (pegar y enviar manualmente)</button>
+</section>
+<section aria-label="Contexto voluntario"><h2>Contexto voluntario (Fase 3)</h2>
+<p><small>Pega o selecciona texto. Se anonimiza local, previsualizas, apruebas y confirmas. Cancelar limpia temporales. Imágenes bloqueadas: usa texto.</small></p>
+<label for="cx-raw">Fragmento</label><textarea id="cx-raw" placeholder="Pega aquí el fragmento (máx 4000)" aria-label="Fragmento de contexto"></textarea>
+<button id="cx-redact">1) Anonimizar local</button>
+<div id="cx-prev" style="white-space:pre-wrap;border:1px dashed #888;padding:8px;margin:8px 0"></div>
+<label><input type="checkbox" id="cx-consent" aria-label="Confirmo transmitir"> Confirmo transmitir este texto a la IA</label>
+<button id="cx-confirm">2) Confirmar transmisión</button>
+<button id="cx-cancel">Cancelar y limpiar</button>
+<label for="cx-img">Imagen (bloqueada en Fase 3)</label><input id="cx-img" type="file" accept="image/*" aria-label="Imagen bloqueada"><div id="cx-msg"></div>
+</section>
+<section aria-label="Aprendizaje voluntario"><h2>Aprendizaje voluntario (FR-11)</h2>
+<p><small>Solo entra a la base con anonimizado + preview + aprobación + confirmación.</small></p>
+<label for="kb-cat">Categoría</label><input id="kb-cat" placeholder="categoría" value="faq" aria-label="Categoría">
+<button id="kb-propose">1) Proponer</button>
+<div id="kb-prev" style="white-space:pre-wrap;border:1px dashed #888;padding:8px;margin:8px 0"></div>
+<button id="kb-approve">2) Aprobar texto</button>
+<button id="kb-confirm">3) Confirmar inclusión</button>
+<button id="kb-cancel">Cancelar</button>
+</section>
+<section><h2>Sincronización (Fase 5 — piloto sintético, opt-in)</h2>
+<p><small>Manual, solo tras enrolamiento. Instalaciones aisladas. Bloqueo ante cuota/costo.</small></p>
+<button id="s-now">Sincronizar ahora</button><div id="s-status">Sin conexión. Cola local: 0.</div>
+<div id="s-conflicts" style="white-space:pre-wrap;border:1px solid #888;padding:8px;margin:8px 0"></div>
+</section>
+<section><h2>Estado</h2><div id="st">Offline OK. IA: requiere key de sesión + confirmación.</div><ul id="list"></ul></section>
+<script type="module" src="./options.js"></script>
+</body>
+</html>

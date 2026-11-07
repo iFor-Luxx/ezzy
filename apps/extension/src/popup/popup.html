@@ -1,0 +1,15 @@
+<!doctype html>
+<html lang="es">
+<head><meta charset="utf-8"><title>Ezzy — selector</title><style>body{font-family:system-ui;min-width:320px;padding:12px}input{width:100%;padding:8px}#r{margin-top:8px;display:grid;gap:8px}button{text-align:left;padding:8px}:focus-visible{outline:2px solid #000}</style></head>
+<body>
+<h1>Ezzy</h1>
+<label for="q">Buscar (offline)</label>
+<input id="q" placeholder="Buscar mensaje o producto (offline)" autocomplete="off" aria-label="Buscar mensaje o producto">
+<div id="r"></div>
+<div id="pv" style="border:1px solid #888;padding:8px;margin-top:8px;white-space:pre-wrap"></div>
+<div id="vars"></div>
+<button id="copy">Copiar (pegar y enviar manualmente)</button>
+<p><small>Atajos: Ctrl+Shift+Y selector · U/I/O favoritos. Copiar/insertar tras confirmar. Sin auto-envío.</small></p>
+<script type="module" src="./popup.js"></script>
+</body>
+</html>

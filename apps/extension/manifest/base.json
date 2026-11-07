@@ -1,0 +1,17 @@
+{
+  "manifest_version": 3,
+  "name": "Ezzy (dev)",
+  "version": "0.1.0",
+  "description": "Organiza ventas, activa mensajes aprobados por teclado. Nunca envía solo.",
+  "minimum_chrome_version": "120",
+  "action": { "default_popup": "popup.html" },
+  "options_page": "options.html",
+  "background": { "service_worker": "background.js", "type": "module" },
+  "permissions": ["storage", "scripting", "activeTab", "clipboardWrite"],
+  "commands": {
+    "open-selector": { "suggested_key": { "default": "Ctrl+Shift+Y" }, "description": "Abrir selector Ezzy" },
+    "favorite-1": { "suggested_key": { "default": "Ctrl+Shift+U" }, "description": "Insertar favorito 1" },
+    "favorite-2": { "suggested_key": { "default": "Ctrl+Shift+I" }, "description": "Insertar favorito 2" },
+    "favorite-3": { "suggested_key": { "default": "Ctrl+Shift+O" }, "description": "Insertar favorito 3" }
+  }
+}

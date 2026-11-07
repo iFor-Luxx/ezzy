@@ -1,0 +1,19 @@
+node_modules/
+dist/
+build/
+*.tsbuildinfo
+.DS_Store
+Thumbs.db
+# Fase 1: núcleo local — sin secretos en repo
+*.pem
+*.key
+.env
+.env.*
+# Medios siempre locales, nunca commit
+*.png
+*.jpg
+*.jpeg
+*.mp4
+*.webm
+# Backups locales de prueba
+*.ezzy-backup.json
