@@ -2,7 +2,7 @@ import React from "react";
 import { Database, Pencil, Trash2, RefreshCw, KeyRound } from "lucide-react";
 import { Button, Card, Field, Input, Textarea, Badge } from "../components/ui";
 import { buildUpsert, buildTombstone, type RemoteRecord, type SyncChange } from "../lib/cloud";
-import { toast } from "../hooks/use-toast";
+import { toast } from "../components/ui/toast";
 
 // Datos en la nube: ver, editar y eliminar registros del Worker desplegado.
 // Requiere instalación enrolada (secreto del propietario, solo en memoria, nunca se guarda).
@@ -75,9 +75,9 @@ export default function ExplorerNube(props: { workerUrl: string }) {
       const data = out["data"];
       if (!Array.isArray(data)) throw new Error("respuesta inválida");
       setRecords(data as RemoteRecord[]);
-      if (data.length === 0) toast({ description: "La nube está vacía." });
+      if (data.length === 0) toast.add({ description: "La nube está vacía." });
     } catch (e) {
-      toast({ title: "Error", description: e instanceof Error ? e.message : "no se pudo cargar" });
+      toast.add({ title: "Error", description: e instanceof Error ? e.message : "no se pudo cargar" });
     } finally {
       setBusy(false);
     }
@@ -85,7 +85,7 @@ export default function ExplorerNube(props: { workerUrl: string }) {
 
   async function enroll(): Promise<void> {
     if (!secret) {
-      toast({ title: "Error", description: "pega el secreto del propietario para enrolar" });
+      toast.add({ title: "Error", description: "pega el secreto del propietario para enrolar" });
       return;
     }
     setBusy(true);
@@ -116,10 +116,10 @@ export default function ExplorerNube(props: { workerUrl: string }) {
         // sin almacenamiento
       }
       setSecret("");
-      toast({ description: "Instalación enrolada." });
+      toast.add({ description: "Instalación enrolada." });
       await load();
     } catch (e) {
-      toast({ title: "Error", description: e instanceof Error && e.name === "AbortError" ? "sin respuesta (15s)" : e instanceof Error ? e.message : "no se pudo enrolar" });
+      toast.add({ title: "Error", description: e instanceof Error && e.name === "AbortError" ? "sin respuesta (15s)" : e instanceof Error ? e.message : "no se pudo enrolar" });
     } finally {
       setBusy(false);
     }
@@ -133,7 +133,7 @@ export default function ExplorerNube(props: { workerUrl: string }) {
       if (typeof parsed !== "object" || parsed === null || Array.isArray(parsed)) throw new Error("debe ser un objeto JSON");
       payload = parsed as Record<string, unknown>;
     } catch (e) {
-      toast({ title: "Error", description: e instanceof Error ? e.message : "JSON inválido" });
+      toast.add({ title: "Error", description: e instanceof Error ? e.message : "JSON inválido" });
       return;
     }
     setBusy(true);
@@ -141,10 +141,10 @@ export default function ExplorerNube(props: { workerUrl: string }) {
       await push([buildUpsert(rec.entity_type, rec.entity_id, rec.revision, payload)]);
       setEditing(null);
       setOpenId(null);
-      toast({ description: "Guardado." });
+      toast.add({ description: "Guardado." });
       await load();
     } catch (e) {
-      toast({ title: "Error", description: e instanceof Error ? e.message : "no se pudo guardar" });
+      toast.add({ title: "Error", description: e instanceof Error ? e.message : "no se pudo guardar" });
     } finally {
       setBusy(false);
     }
@@ -155,10 +155,10 @@ export default function ExplorerNube(props: { workerUrl: string }) {
     setBusy(true);
     try {
       await push([buildTombstone(rec.entity_type, rec.entity_id, rec.revision)]);
-      toast({ description: "Eliminado." });
+      toast.add({ description: "Eliminado." });
       await load();
     } catch (e) {
-      toast({ title: "Error", description: e instanceof Error ? e.message : "no se pudo eliminar" });
+      toast.add({ title: "Error", description: e instanceof Error ? e.message : "no se pudo eliminar" });
     } finally {
       setBusy(false);
     }

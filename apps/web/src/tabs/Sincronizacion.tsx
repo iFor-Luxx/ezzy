@@ -4,7 +4,7 @@ import { Button, Card, Field, Input, Badge } from "../components/ui";
 import { buildBridge, parseBridge, audit, type WebState } from "../lib/store";
 import { parseStatus, pct, barTone, WORKER_KEY, STATUS_KEY, type CloudStatusView } from "../lib/cloud";
 import ExplorerNube from "./ExplorerNube";
-import { toast } from "../hooks/use-toast";
+import { toast } from "../components/ui/toast";
 
 function Bar(props: { label: string; used: number; cap: number; unit: string }) {
   const p = pct(props.used, props.cap);
@@ -51,7 +51,7 @@ export default function Sincronizacion(props: { s: WebState; set: React.Dispatch
     a.download = `ezzy-puente-${new Date().toISOString().slice(0, 10)}.json`;
     a.click();
     set((p) => audit(p, "puente.exportar", `${s.products.length} prod, ${s.messages.length} msg`));
-    toast({ description: "Archivo descargado. En la extensión: Opciones → Restaurar." });
+    toast.add({ description: "Archivo descargado. En la extensión: Opciones → Restaurar." });
   }
 
   function upload(e: React.ChangeEvent<HTMLInputElement>): void {
@@ -68,9 +68,9 @@ export default function Sincronizacion(props: { s: WebState; set: React.Dispatch
           prices: [...p.prices, ...back.prices.filter((x) => !p.prices.some((y) => y.id === x.id))],
           messages: [...p.messages, ...back.messages.filter((x) => !p.messages.some((y) => y.id === x.id))],
         }, "puente.importar", f.name));
-        toast({ description: `Importado: ${back.products.length} productos, ${back.messages.length} mensajes.` });
+        toast.add({ description: `Importado: ${back.products.length} productos, ${back.messages.length} mensajes.` });
       } catch (ex) {
-        toast({ title: "Error", description: ex instanceof Error ? ex.message : "archivo inválido" });
+        toast.add({ title: "Error", description: ex instanceof Error ? ex.message : "archivo inválido" });
       }
     };
     r.readAsText(f);
@@ -80,7 +80,7 @@ export default function Sincronizacion(props: { s: WebState; set: React.Dispatch
   async function checkCloud(): Promise<void> {
     const base = workerUrl.trim().replace(/\/+$/, "");
     if (!base.startsWith("https://")) {
-      toast({ title: "Error", description: "pega la URL https de tu Worker desplegado" });
+      toast.add({ title: "Error", description: "pega la URL https de tu Worker desplegado" });
       return;
     }
     setChecking(true);
@@ -99,7 +99,7 @@ export default function Sincronizacion(props: { s: WebState; set: React.Dispatch
       }
       set((p) => audit(p, "nube.consultar", st.blocked ? `bloqueado ${st.code ?? ""}` : "ok"));
     } catch (e) {
-      toast({ title: "Error", description: e instanceof Error && e.name === "AbortError" ? "sin respuesta (15s)" : e instanceof Error ? e.message : "no se pudo consultar" });
+      toast.add({ title: "Error", description: e instanceof Error && e.name === "AbortError" ? "sin respuesta (15s)" : e instanceof Error ? e.message : "no se pudo consultar" });
     } finally {
       window.clearTimeout(timer);
       setChecking(false);

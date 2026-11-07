@@ -2,7 +2,7 @@ import React from "react";
 import { MessageSquarePlus, Search, Star } from "lucide-react";
 import { Button, Card, Field, Input, Textarea, Badge, Empty } from "../components/ui";
 import { newId, nowIso, audit, type WebState } from "../lib/store";
-import { toast } from "../hooks/use-toast";
+import { toast } from "../components/ui/toast";
 
 export default function Mensajes(props: { s: WebState; set: React.Dispatch<React.SetStateAction<WebState>> }) {
   const { s, set } = props;
@@ -27,9 +27,9 @@ export default function Mensajes(props: { s: WebState; set: React.Dispatch<React
       }, "mensaje.crear", title.trim()));
       setTitle("");
       setBody("Hola {{nombre}}, ");
-      toast({ description: `"${title.trim()}" aprobado.` });
+      toast.add({ description: `"${title.trim()}" aprobado.` });
     } catch (ex) {
-      toast({ title: "Error", description: ex instanceof Error ? ex.message : "error" });
+      toast.add({ title: "Error", description: ex instanceof Error ? ex.message : "error" });
     }
   }
 

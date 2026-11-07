@@ -7,7 +7,7 @@ import Sincronizacion from "./tabs/Sincronizacion";
 import Respaldo from "./tabs/Respaldo";
 import Configuracion from "./tabs/Configuracion";
 import { useWebState } from "./lib/store";
-import { Toaster } from "./components/ui/toaster";
+import { Toaster } from "./components/ui/toast";
 
 const TABS = [
   { id: "catalogo", label: "Catálogo", icon: LayoutGrid },

@@ -4,7 +4,7 @@ import { Button, Card, Field, Input, Badge, Empty } from "../components/ui";
 import { newId, nowIso, solesToMinor, validateQty, tierLabel, parseTierLabel, prettyVariant, formatMoney, audit, type WebState } from "../lib/store";
 import { pingApi } from "@ezzy/ai-opencode";
 import { inferenceBase, storedKey, storedModelId } from "../lib/ai";
-import { toast } from "../hooks/use-toast";
+import { toast } from "../components/ui/toast";
 
 interface Tier { qty: string; soles: string; }
 
@@ -55,9 +55,9 @@ export default function Catalogo(props: { s: WebState; set: React.Dispatch<React
       setName("");
       setFabric("");
       setTiers(defaultTiers());
-      toast({ description: `"${product.name}" guardado con ${parsed.length} precio(s).` });
+      toast.add({ description: `"${product.name}" guardado con ${parsed.length} precio(s).` });
     } catch (ex) {
-      toast({ title: "Error", description: ex instanceof Error ? ex.message : "error" });
+      toast.add({ title: "Error", description: ex instanceof Error ? ex.message : "error" });
     }
   }
 
@@ -80,7 +80,7 @@ export default function Catalogo(props: { s: WebState; set: React.Dispatch<React
       });
       setFabric(out.trim());
     } catch (e) {
-      toast({ title: "Error", description: e instanceof Error ? e.message.replace(/oc_sk_\S+/g, "oc_sk_…") : "error" });
+      toast.add({ title: "Error", description: e instanceof Error ? e.message.replace(/oc_sk_\S+/g, "oc_sk_…") : "error" });
     } finally {
       setAiBusy(false);
     }
@@ -170,7 +170,7 @@ export default function Catalogo(props: { s: WebState; set: React.Dispatch<React
       });
       setEditingId(null);
     } catch (e) {
-      toast({ title: "Error", description: e instanceof Error ? e.message : "error" });
+      toast.add({ title: "Error", description: e instanceof Error ? e.message : "error" });
     }
   }
 

@@ -4,7 +4,7 @@ import { Button, Card, Field, Input, Select, SelectTrigger, SelectContent, Selec
 import { type WebState } from "../lib/store";
 import { pingApi, listModels, isBlockedForSales } from "@ezzy/ai-opencode";
 import { storedModelId, saveModelId } from "../lib/ai";
-import { toast } from "../hooks/use-toast";
+import { toast } from "../components/ui/toast";
 
 // La key vive solo en sessionStorage de esta pestaña (se borra al cerrar). Nunca en logs ni sync.
 const KEY = "ezzy.oc.key";
@@ -98,7 +98,7 @@ export default function Asistente(_props: { s: WebState; set: React.Dispatch<Rea
       setModel((m) => (m && ids.includes(m) ? m : (ids.find((id) => !isBlockedForSales(id)) ?? ids[0] ?? "")));
       lastFetched.current = k;
     } catch (e) {
-      toast({ title: "Error", description: e instanceof Error ? e.message.replace(/oc_sk_\S+/g, "oc_sk_…") : "no se pudo consultar" });
+      toast.add({ title: "Error", description: e instanceof Error ? e.message.replace(/oc_sk_\S+/g, "oc_sk_…") : "no se pudo consultar" });
     } finally {
       fetching.current = false;
       setLoadingModels(false);
@@ -117,11 +117,11 @@ export default function Asistente(_props: { s: WebState; set: React.Dispatch<Rea
 
   function saveKey(): void {
     if (!keyInput.startsWith("oc_sk_")) {
-      toast({ title: "Error", description: "pega tu key primero" });
+      toast.add({ title: "Error", description: "pega tu key primero" });
       return;
     }
     writeStored("saved", keyInput);
-    toast({ description: "Key guardada en este navegador." });
+    toast.add({ description: "Key guardada en este navegador." });
   }
 
   // Prueba de conexión: solo HOLA, sin nada más. Solo para saber que la API responde.
@@ -135,7 +135,7 @@ export default function Asistente(_props: { s: WebState; set: React.Dispatch<Rea
       const text = await pingApi({ baseURL, apiKey: k, modelId: model, text: "HOLA", sessionId, timeoutMs: 120000, stream: true, onToken: (t) => setDraft((d) => d + t) });
       setDraft(text);
     } catch (e) {
-      toast({ title: "Error", description: e instanceof Error ? e.message.replace(/oc_sk_\S+/g, "oc_sk_…") : "error" });
+      toast.add({ title: "Error", description: e instanceof Error ? e.message.replace(/oc_sk_\S+/g, "oc_sk_…") : "error" });
     } finally {
       setBusy(false);
     }

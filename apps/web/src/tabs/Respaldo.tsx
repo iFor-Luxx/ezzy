@@ -5,7 +5,7 @@ import {
 } from "lucide-react";
 import { Button, Card, Empty, Badge } from "../components/ui";
 import { buildBridge, seedExample, audit, type WebState } from "../lib/store";
-import { toast } from "../hooks/use-toast";
+import { toast } from "../components/ui/toast";
 
 function fmtDay(ts: string): string {
   const d = new Date(ts);
@@ -49,7 +49,7 @@ export default function Respaldo(props: { s: WebState; set: React.Dispatch<React
       <Card title="Respaldo local" icon={<DatabaseBackup size={18} />} sub="Sin nube. Las imágenes quedan fuera (solo referencias locales en tus equipos).">
         <div className="flex flex-wrap gap-2">
           <Button onClick={full}>Exportar todo</Button>
-          <Button variant="secondary" onClick={() => { set(seedExample()); toast({ description: "Ejemplo sintético cargado." }); }}><FlaskConical size={15} /> Cargar ejemplo</Button>
+          <Button variant="secondary" onClick={() => { set(seedExample()); toast.add({ description: "Ejemplo sintético cargado." }); }}><FlaskConical size={15} /> Cargar ejemplo</Button>
           <Button variant="destructive" onClick={() => { if (confirm("¿Borrar todo el panel? Haz un respaldo antes.")) { localStorage.removeItem("ezzy.web.v1"); location.reload(); } }}><Trash2 size={15} /> Borrar panel</Button>
         </div>
       </Card>

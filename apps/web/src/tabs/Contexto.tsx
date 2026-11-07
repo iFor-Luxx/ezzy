@@ -3,7 +3,7 @@ import { ScanEye, ImageOff } from "lucide-react";
 import { Button, Card, Field, Textarea, Input, Empty } from "../components/ui";
 import { audit, type WebState } from "../lib/store";
 import { anonymizeForKnowledge } from "@ezzy/domain";
-import { toast } from "../hooks/use-toast";
+import { toast } from "../components/ui/toast";
 
 // Texto manual + anonimizado local + aprobación. Imagen bloqueada (fail-closed).
 export default function Contexto(props: { s: WebState; set: React.Dispatch<React.SetStateAction<WebState>> }) {
@@ -13,11 +13,11 @@ export default function Contexto(props: { s: WebState; set: React.Dispatch<React
 
   function redact(): void {
     if (!raw.trim()) {
-      toast({ title: "Error", description: "Pega primero un fragmento (máx 4000)." });
+      toast.add({ title: "Error", description: "Pega primero un fragmento (máx 4000)." });
       return;
     }
     if (raw.length > 4000) {
-      toast({ title: "Error", description: "Fragmento > 4000 caracteres." });
+      toast.add({ title: "Error", description: "Fragmento > 4000 caracteres." });
       return;
     }
     setPrev(anonymizeForKnowledge(raw));
@@ -31,7 +31,7 @@ export default function Contexto(props: { s: WebState; set: React.Dispatch<React
           <Field label="Fragmento" htmlFor="cx-raw"><Textarea id="cx-raw" value={raw} onChange={(e) => setRaw(e.target.value)} /></Field>
           <div className="flex gap-2">
             <Button onClick={redact}>1) Anonimizar local</Button>
-            <Button variant="secondary" onClick={() => { setRaw(""); setPrev(""); toast({ description: "Temporales limpiados." }); }}>Cancelar y limpiar</Button>
+            <Button variant="secondary" onClick={() => { setRaw(""); setPrev(""); toast.add({ description: "Temporales limpiados." }); }}>Cancelar y limpiar</Button>
           </div>
         </div>
       </Card>
@@ -42,7 +42,7 @@ export default function Contexto(props: { s: WebState; set: React.Dispatch<React
             <ImageOff size={15} /> Bloqueada en esta versión
           </div>
           <Input id="cx-img" type="file" accept="image/*" className="hidden" aria-label="Imagen bloqueada"
-            onChange={(e) => { e.target.value = ""; toast({ title: "Error", description: "Imagen no soportada: pega el texto manualmente." }); }} />
+            onChange={(e) => { e.target.value = ""; toast.add({ title: "Error", description: "Imagen no soportada: pega el texto manualmente." }); }} />
         </Field>
       </Card>
     </div>
