@@ -16,7 +16,7 @@ export const SYNCABLE_TYPES = [
 export type SyncableType = (typeof SYNCABLE_TYPES)[number];
 
 const ALLOWLIST: Record<SyncableType, string[]> = {
-  product: ["id", "sku", "name", "category_id", "description", "status", "created_at", "updated_at", "revision"],
+  product: ["id", "sku", "name", "category_id", "description", "fabric", "status", "created_at", "updated_at", "revision"],
   variant: ["id", "product_id", "label", "size", "color", "attributes", "attributes_json", "active", "revision"],
   price: ["id", "product_id", "variant_id", "amount_minor", "currency", "valid_from", "valid_to", "source", "verified_at", "revision"],
   promotion: ["id", "name", "rules", "rules_json", "starts_at", "ends_at", "status", "verified_at", "revision"],

@@ -5,3 +5,4 @@
 3. Si algo es ambiguo, pregunta antes de hacerlo.
 4. No corras tests, builds ni verificaciones salvo que Lux lo pida o haya un error visible que impediría ver la app.
 5. Respuestas cortas y directas, sin rodeos.
+6. UI: siempre con componentes shadcn y estilo iOS/macOS/Apple — liquid glass + glassmorphism (superficies translúcidas, blur, brillo especular, bordes suaves).

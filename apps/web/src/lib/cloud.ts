@@ -61,3 +61,46 @@ export function barTone(p: number): "ok" | "warn" | "bad" {
   if (p >= 50) return "warn";
   return "ok";
 }
+
+export interface RemoteRecord {
+  entity_type: string;
+  entity_id: string;
+  revision: number;
+  deleted: boolean;
+  dto: Record<string, unknown> | null;
+}
+
+export interface SyncChange {
+  idempotencyKey: string;
+  entity_type: string;
+  entity_id: string;
+  operation: "upsert" | "tombstone";
+  revision: number;
+  base_revision: number;
+  payload: Record<string, unknown>;
+}
+
+// Subir edición: revision+1 sobre la base vista. El servidor rechaza si otro avanzó (conflicto visible).
+export function buildUpsert(entity_type: string, entity_id: string, base_revision: number, payload: Record<string, unknown>): SyncChange {
+  return {
+    idempotencyKey: typeof crypto !== "undefined" && "randomUUID" in crypto ? crypto.randomUUID() : `${Date.now()}-${Math.random()}`,
+    entity_type,
+    entity_id,
+    operation: "upsert",
+    revision: base_revision + 1,
+    base_revision,
+    payload,
+  };
+}
+
+export function buildTombstone(entity_type: string, entity_id: string, base_revision: number): SyncChange {
+  return {
+    idempotencyKey: typeof crypto !== "undefined" && "randomUUID" in crypto ? crypto.randomUUID() : `${Date.now()}-${Math.random()}`,
+    entity_type,
+    entity_id,
+    operation: "tombstone",
+    revision: base_revision + 1,
+    base_revision,
+    payload: {},
+  };
+}

@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test";
-import { parseStatus, pct, barTone } from "./cloud";
+import { parseStatus, pct, barTone, buildUpsert, buildTombstone } from "./cloud";
 
 const good = {
   schemaVersion: 1,
@@ -28,5 +28,15 @@ describe("estado de la nube", () => {
     expect(barTone(10)).toBe("ok");
     expect(barTone(60)).toBe("warn");
     expect(barTone(80)).toBe("bad");
+  });
+  test("upsert/tombstone suben revision+1 sobre la base", () => {
+    const u = buildUpsert("product", "p1", 3, { id: "p1", name: "x" });
+    expect(u.operation).toBe("upsert");
+    expect(u.revision).toBe(4);
+    expect(u.base_revision).toBe(3);
+    const t = buildTombstone("price", "pr1", 1);
+    expect(t.operation).toBe("tombstone");
+    expect(t.revision).toBe(2);
+    expect(t.idempotencyKey).not.toBe(u.idempotencyKey);
   });
 });

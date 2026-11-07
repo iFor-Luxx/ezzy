@@ -11,11 +11,11 @@ const buttonVariants = cva(
   {
     variants: {
       variant: {
-        default: "bg-[#0071e3] text-white shadow hover:bg-[#0077ed]",
-        secondary: "bg-[#e8e8ed] text-[#1d1d1f] hover:bg-[#d2d2d7]",
-        outline: "border border-[#d2d2d7] bg-white hover:bg-[#f5f5f7]",
-        ghost: "hover:bg-[#f5f5f7]",
-        destructive: "bg-[#cf222e] text-white shadow hover:bg-[#b91c22]",
+        default: "bg-[#007aff] text-white active:brightness-95",
+        secondary: "bg-[#e9e9ee] text-[#1d1d1f] hover:bg-[#e0e0e6]",
+        outline: "border border-black/10 bg-white hover:bg-black/[0.02]",
+        ghost: "hover:bg-black/[0.04]",
+        destructive: "bg-[#ff3b30] text-white active:brightness-95",
       },
       size: {
         default: "h-9 px-4",
@@ -39,7 +39,7 @@ export function Card(props: { title?: string; sub?: string; icon?: React.ReactNo
       {(props.title || props.action) && (
         <div className="mb-1 flex items-start justify-between gap-3">
           <div className="flex items-center gap-2">
-            {props.icon ? <span className="text-[#0071e3]">{props.icon}</span> : null}
+            {props.icon ? <span className="text-[#007aff]">{props.icon}</span> : null}
             {props.title ? <h2 className="text-[17px] font-semibold tracking-tight">{props.title}</h2> : null}
           </div>
           {props.action}
@@ -64,9 +64,10 @@ export function Field(props: { label: string; htmlFor: string; hint?: string; ch
 export function Input(props: React.InputHTMLAttributes<HTMLInputElement>) {
   return (
     <input
+      autoComplete="off"
       {...props}
       className={cn(
-        "flex h-10 w-full rounded-xl border border-[#d2d2d7] bg-white px-3 text-sm shadow-[inset_0_1px_2px_rgba(0,0,0,0.04)] placeholder:text-[#86868b] focus:border-[#0071e3]",
+        "flex h-10 w-full rounded-xl border border-transparent bg-[#f2f2f7] px-3 text-sm placeholder:text-[#86868b] focus:border-[#007aff] focus:bg-white",
         props.className
       )}
     />
@@ -76,9 +77,10 @@ export function Input(props: React.InputHTMLAttributes<HTMLInputElement>) {
 export function Textarea(props: React.TextareaHTMLAttributes<HTMLTextAreaElement>) {
   return (
     <textarea
+      autoComplete="off"
       {...props}
       className={cn(
-        "flex min-h-[88px] w-full rounded-xl border border-[#d2d2d7] bg-white px-3 py-2 text-sm shadow-[inset_0_1px_2px_rgba(0,0,0,0.04)] placeholder:text-[#86868b] focus:border-[#0071e3]",
+        "flex min-h-[88px] w-full rounded-xl border border-transparent bg-[#f2f2f7] px-3 py-2 text-sm placeholder:text-[#86868b] focus:border-[#007aff] focus:bg-white",
         props.className
       )}
     />
@@ -93,7 +95,7 @@ export function SelectTrigger(props: React.ComponentPropsWithoutRef<typeof Selec
     <SelectPrimitive.Trigger
       {...props}
       className={cn(
-        "flex h-10 w-full items-center justify-between rounded-xl border border-[#d2d2d7] bg-white px-3 text-sm shadow-[inset_0_1px_2px_rgba(0,0,0,0.04)] focus:border-[#0071e3] [&>span]:truncate",
+        "flex h-10 w-full items-center justify-between rounded-xl border border-transparent bg-[#f2f2f7] px-3 text-sm focus:border-[#007aff] focus:bg-white [&>span]:truncate",
         props.className
       )}
     >
@@ -113,7 +115,7 @@ export function SelectContent(props: React.ComponentPropsWithoutRef<typeof Selec
         position="popper"
         sideOffset={6}
         className={cn(
-          "z-50 max-h-64 min-w-[10rem] overflow-auto rounded-2xl border border-[#e8e8ed] bg-white p-1.5 shadow-xl",
+          "z-50 max-h-64 min-w-[10rem] overflow-auto rounded-2xl border border-black/[0.06] bg-white p-1.5 shadow-[0_8px_30px_rgba(0,0,0,0.12)]",
           props.className
         )}
       >
@@ -151,7 +153,7 @@ const badgeVariants = cva(
         ok: "border-[#1a7f37]/30 bg-[#1a7f37]/10 text-[#1a7f37]",
         warn: "border-[#9a6700]/30 bg-[#9a6700]/10 text-[#9a6700]",
         bad: "border-[#cf222e]/30 bg-[#cf222e]/10 text-[#cf222e]",
-        info: "border-[#0071e3]/30 bg-[#0071e3]/10 text-[#0071e3]",
+        info: "border-[#007aff]/30 bg-[#007aff]/10 text-[#007aff]",
       },
     },
     defaultVariants: { tone: "default" },
@@ -185,7 +187,7 @@ export function Dialog(props: { title: string; children: React.ReactNode; onClos
     >
       <DialogPrimitive.Portal>
         <DialogPrimitive.Overlay className="fixed inset-0 z-30 bg-black/30 backdrop-blur-sm" />
-        <DialogPrimitive.Content className="fixed left-1/2 top-1/2 z-30 max-h-[85vh] w-full max-w-xl -translate-x-1/2 -translate-y-1/2 overflow-auto rounded-2xl bg-white p-6 shadow-2xl">
+        <DialogPrimitive.Content className="fixed left-1/2 top-1/2 z-30 max-h-[85vh] w-full max-w-xl -translate-x-1/2 -translate-y-1/2 overflow-auto rounded-2xl border border-black/[0.06] bg-white p-6 shadow-[0_8px_30px_rgba(0,0,0,0.12)]">
           <DialogPrimitive.Title className="mb-3 text-lg font-semibold tracking-tight">{props.title}</DialogPrimitive.Title>
           {props.children}
         </DialogPrimitive.Content>

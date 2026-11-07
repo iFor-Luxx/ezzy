@@ -1,11 +1,14 @@
 import React from "react";
-import { Sparkles, ClipboardCopy, Clipboard, Trash2 } from "lucide-react";
+import { Sparkles, ClipboardCopy } from "lucide-react";
 import { Button, Card, Field, Input, Select, SelectTrigger, SelectContent, SelectItem, Badge, Empty } from "../components/ui";
 import { type WebState } from "../lib/store";
 import { pingApi, listModels, isBlockedForSales } from "@ezzy/ai-opencode";
+import { storedModelId, saveModelId } from "../lib/ai";
+import { toast } from "../hooks/use-toast";
 
 // La key vive solo en sessionStorage de esta pestaña (se borra al cerrar). Nunca en logs ni sync.
 const KEY = "ezzy.oc.key";
+const SAVED_KEY = "ezzy.oc.key.saved";
 // Base Go verificada en docs (/console/go): lista y chat van con prefijo /go.
 const GO_BASE = "https://opencode.ai/inference/go";
 // En dev pasamos por proxy local para que el navegador no bloquee (CORS).
@@ -20,8 +23,11 @@ export default function Asistente(_props: { s: WebState; set: React.Dispatch<Rea
   const fetching = React.useRef(false);
   const lastFetched = React.useRef("");
   const baseURL = BASE_URL;
+  // El modelo elegido siempre queda guardado (para usarlo desde Catálogo).
+  React.useEffect(() => {
+    if (model) saveModelId(model);
+  }, [model]);
   const [draft, setDraft] = React.useState("");
-  const [err, setErr] = React.useState("");
   const [busy, setBusy] = React.useState(false);
   // ID estable de sesión para Go (se genera una vez por pestaña).
   const [sessionId] = React.useState(() => {
@@ -42,10 +48,35 @@ export default function Asistente(_props: { s: WebState; set: React.Dispatch<Rea
     return id;
   });
 
-  // Al abrir: recupera key de sesión. Solo hay modelos tras consulta en vivo con esa key.
+  function readStored(which: "session" | "saved"): string {
+    try {
+      const v = which === "session" ? sessionStorage.getItem(KEY) : localStorage.getItem(SAVED_KEY);
+      return v ?? "";
+    } catch {
+      return "";
+    }
+  }
+
+  function writeStored(which: "session" | "saved", v: string): void {
+    try {
+      if (which === "session") {
+        if (v) sessionStorage.setItem(KEY, v);
+        else sessionStorage.removeItem(KEY);
+      } else {
+        if (v) localStorage.setItem(SAVED_KEY, v);
+        else localStorage.removeItem(SAVED_KEY);
+      }
+    } catch {
+      // sin almacenamiento
+    }
+  }
+
+  // Al abrir: sesión primero; si no hay y la guardaste antes, se restaura sola.
   React.useEffect(() => {
-    const k = sessionStorage.getItem(KEY) ?? "";
+    const k = readStored("session") || readStored("saved");
     setKeyInput(k);
+    const stored = storedModelId();
+    if (stored) setModel(stored);
     if (k.startsWith("oc_sk_") && k.length >= 20) {
       timer.current = window.setTimeout(() => void loadModels(k), 500);
     }
@@ -59,7 +90,6 @@ export default function Asistente(_props: { s: WebState; set: React.Dispatch<Rea
     if (fetching.current || lastFetched.current === k) return;
     fetching.current = true;
     setLoadingModels(true);
-    setErr("");
     try {
       const { models: list } = await listModels({ baseURL, apiKey: k });
       // Tal cual los trae tu key: sin ocultar ninguno. Los ⚠ pueden retener/entrenar.
@@ -68,7 +98,7 @@ export default function Asistente(_props: { s: WebState; set: React.Dispatch<Rea
       setModel((m) => (m && ids.includes(m) ? m : (ids.find((id) => !isBlockedForSales(id)) ?? ids[0] ?? "")));
       lastFetched.current = k;
     } catch (e) {
-      setErr(e instanceof Error ? e.message.replace(/oc_sk_\S+/g, "oc_sk_…") : "no se pudo consultar");
+      toast({ variant: "destructive", description: e instanceof Error ? e.message.replace(/oc_sk_\S+/g, "oc_sk_…") : "no se pudo consultar" });
     } finally {
       fetching.current = false;
       setLoadingModels(false);
@@ -77,39 +107,25 @@ export default function Asistente(_props: { s: WebState; set: React.Dispatch<Rea
 
   function onKeyChange(v: string): void {
     setKeyInput(v);
-    setErr("");
-    if (v) sessionStorage.setItem(KEY, v);
-    else sessionStorage.removeItem(KEY);
+    writeStored("session", v);
+    if (!v) writeStored("saved", ""); // vaciar el campo olvida todo, incluido lo guardado
     if (timer.current) window.clearTimeout(timer.current);
     if (v.startsWith("oc_sk_") && v.length >= 20 && v !== lastFetched.current) {
       timer.current = window.setTimeout(() => void loadModels(v), 700);
     }
   }
 
-  async function pasteKey(): Promise<void> {
-    try {
-      const v = (await navigator.clipboard.readText()).trim();
-      if (timer.current) window.clearTimeout(timer.current);
-      onKeyChange(v);
-      if (v.startsWith("oc_sk_")) await loadModels(v);
-      else setErr("eso no parece una key (empieza con oc_sk_)");
-    } catch {
-      setErr("no se pudo pegar: usa Ctrl+V en el campo");
+  function saveKey(): void {
+    if (!keyInput.startsWith("oc_sk_")) {
+      toast({ variant: "destructive", description: "pega tu key primero" });
+      return;
     }
-  }
-
-  function clearKey(): void {
-    if (timer.current) window.clearTimeout(timer.current);
-    setKeyInput("");
-    sessionStorage.removeItem(KEY);
-    setModels([]);
-    setModel("");
-    setErr("");
+    writeStored("saved", keyInput);
+    toast({ description: "Key guardada en este navegador." });
   }
 
   // Prueba de conexión: solo HOLA, sin nada más. Solo para saber que la API responde.
   async function probar(): Promise<void> {
-    setErr("");
     setBusy(true);
     setDraft("");
     try {
@@ -119,7 +135,7 @@ export default function Asistente(_props: { s: WebState; set: React.Dispatch<Rea
       const text = await pingApi({ baseURL, apiKey: k, modelId: model, text: "HOLA", sessionId, timeoutMs: 120000, stream: true, onToken: (t) => setDraft((d) => d + t) });
       setDraft(text);
     } catch (e) {
-      setErr(e instanceof Error ? e.message.replace(/oc_sk_\S+/g, "oc_sk_…") : "error");
+      toast({ variant: "destructive", description: e instanceof Error ? e.message.replace(/oc_sk_\S+/g, "oc_sk_…") : "error" });
     } finally {
       setBusy(false);
     }
@@ -131,20 +147,7 @@ export default function Asistente(_props: { s: WebState; set: React.Dispatch<Rea
         <Card title="Generar propuesta" icon={<Sparkles size={18} />}>
           <div className="grid gap-3">
             <Field label="API key" htmlFor="ai-key">
-              <div className="relative">
-                <Input id="ai-key" type="password" autoComplete="off" value={keyInput} onChange={(e) => onKeyChange(e.target.value)} className="pr-11" />
-                {keyInput ? (
-                  <button type="button" aria-label="Eliminar key" title="Eliminar" onClick={clearKey}
-                    className="absolute right-1.5 top-1/2 flex h-7 w-7 -translate-y-1/2 items-center justify-center rounded-full text-[#6e6e73] transition active:scale-95 hover:bg-[#f5f5f7]">
-                    <Trash2 size={16} />
-                  </button>
-                ) : (
-                  <button type="button" aria-label="Pegar key" title="Pegar" onClick={() => void pasteKey()}
-                    className="absolute right-1.5 top-1/2 flex h-7 w-7 -translate-y-1/2 items-center justify-center rounded-full text-[#0071e3] transition active:scale-95 hover:bg-[#f5f5f7]">
-                    <Clipboard size={16} />
-                  </button>
-                )}
-              </div>
+              <Input id="ai-key" type="password" autoComplete="off" value={keyInput} onChange={(e) => onKeyChange(e.target.value)} />
             </Field>
             <div>
               <label htmlFor="ai-model" className="mb-1.5 block text-[13px] font-medium">Modelo</label>
@@ -159,8 +162,10 @@ export default function Asistente(_props: { s: WebState; set: React.Dispatch<Rea
                 <p className="text-[13px] text-[#6e6e73]">{loadingModels ? "Consultando modelos…" : "Pega tu API key para cargar los modelos."}</p>
               )}
             </div>
-            {err ? <p className="text-[13px] text-[#cf222e]">{err}</p> : null}
-            <div><Button onClick={() => void probar()} disabled={busy}>Test</Button></div>
+            <div className="flex justify-end gap-2">
+              <Button variant="ghost" className="text-[#007aff]" onClick={() => void probar()} disabled={busy}>Test</Button>
+              <Button onClick={saveKey} disabled={busy}>Guardar</Button>
+            </div>
           </div>
         </Card>
       </div>

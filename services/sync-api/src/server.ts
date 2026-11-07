@@ -12,6 +12,14 @@ interface Rec {
   deleted: boolean;
 }
 
+export interface StoredRecord {
+  entity_type: string;
+  entity_id: string;
+  revision: number;
+  deleted: boolean;
+  dto: Record<string, unknown> | null;
+}
+
 export class SyncServer {
   data = new Map<string, Rec>();
   seenKeys = new Set<string>();
@@ -96,6 +104,14 @@ export class SyncServer {
       applied.push(c.idempotencyKey);
     }
     return { applied, conflicts };
+  }
+
+  /** Lista completa para el panel (ver/editar/eliminar). Requiere instalación enrolada. */
+  list(): StoredRecord[] {
+    return [...this.data.entries()].map(([k, v]) => {
+      const i = k.indexOf(":");
+      return { entity_type: k.slice(0, i), entity_id: k.slice(i + 1), revision: v.revision, deleted: v.deleted, dto: v.dto };
+    });
   }
 
   pull(cursor?: string): { cursor: string; changes: { entity_type: string; entity_id: string; revision: number; deleted: boolean }[] } {

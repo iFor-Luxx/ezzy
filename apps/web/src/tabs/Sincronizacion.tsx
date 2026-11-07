@@ -1,8 +1,10 @@
 import React from "react";
-import { ArrowLeftRight, CloudOff, CloudSun, Upload, Download, RefreshCw } from "lucide-react";
+import { ArrowLeftRight, CloudSun, Upload, Download, RefreshCw } from "lucide-react";
 import { Button, Card, Field, Input, Badge } from "../components/ui";
 import { buildBridge, parseBridge, audit, type WebState } from "../lib/store";
 import { parseStatus, pct, barTone, WORKER_KEY, STATUS_KEY, type CloudStatusView } from "../lib/cloud";
+import ExplorerNube from "./ExplorerNube";
+import { toast } from "../hooks/use-toast";
 
 function Bar(props: { label: string; used: number; cap: number; unit: string }) {
   const p = pct(props.used, props.cap);
@@ -25,7 +27,6 @@ function Bar(props: { label: string; used: number; cap: number; unit: string }) 
 // Estado de la nube: lee /v1/status de tu Worker desplegado (sin tokens en el navegador).
 export default function Sincronizacion(props: { s: WebState; set: React.Dispatch<React.SetStateAction<WebState>> }) {
   const { s, set } = props;
-  const [msg, setMsg] = React.useState("");
   const [workerUrl, setWorkerUrl] = React.useState(() => {
     try {
       return localStorage.getItem(WORKER_KEY) ?? "";
@@ -42,7 +43,6 @@ export default function Sincronizacion(props: { s: WebState; set: React.Dispatch
     }
   });
   const [checking, setChecking] = React.useState(false);
-  const [cloudErr, setCloudErr] = React.useState("");
 
   function download(): void {
     const blob = new Blob([JSON.stringify(buildBridge(s), null, 2)], { type: "application/json" });
@@ -51,7 +51,7 @@ export default function Sincronizacion(props: { s: WebState; set: React.Dispatch
     a.download = `ezzy-puente-${new Date().toISOString().slice(0, 10)}.json`;
     a.click();
     set((p) => audit(p, "puente.exportar", `${s.products.length} prod, ${s.messages.length} msg`));
-    setMsg("Archivo descargado. En la extensión: Opciones → Restaurar → elige este archivo.");
+    toast({ description: "Archivo descargado. En la extensión: Opciones → Restaurar." });
   }
 
   function upload(e: React.ChangeEvent<HTMLInputElement>): void {
@@ -68,9 +68,9 @@ export default function Sincronizacion(props: { s: WebState; set: React.Dispatch
           prices: [...p.prices, ...back.prices.filter((x) => !p.prices.some((y) => y.id === x.id))],
           messages: [...p.messages, ...back.messages.filter((x) => !p.messages.some((y) => y.id === x.id))],
         }, "puente.importar", f.name));
-        setMsg(`Importado: ${back.products.length} productos, ${back.messages.length} mensajes (sin duplicar).`);
+        toast({ description: `Importado: ${back.products.length} productos, ${back.messages.length} mensajes.` });
       } catch (ex) {
-        setMsg(ex instanceof Error ? ex.message : "archivo inválido");
+        toast({ variant: "destructive", description: ex instanceof Error ? ex.message : "archivo inválido" });
       }
     };
     r.readAsText(f);
@@ -78,10 +78,9 @@ export default function Sincronizacion(props: { s: WebState; set: React.Dispatch
   }
 
   async function checkCloud(): Promise<void> {
-    setCloudErr("");
     const base = workerUrl.trim().replace(/\/+$/, "");
     if (!base.startsWith("https://")) {
-      setCloudErr("pega la URL https de tu Worker desplegado");
+      toast({ variant: "destructive", description: "pega la URL https de tu Worker desplegado" });
       return;
     }
     setChecking(true);
@@ -100,7 +99,7 @@ export default function Sincronizacion(props: { s: WebState; set: React.Dispatch
       }
       set((p) => audit(p, "nube.consultar", st.blocked ? `bloqueado ${st.code ?? ""}` : "ok"));
     } catch (e) {
-      setCloudErr(e instanceof Error && e.name === "AbortError" ? "sin respuesta (15s)" : e instanceof Error ? e.message : "no se pudo consultar");
+      toast({ variant: "destructive", description: e instanceof Error && e.name === "AbortError" ? "sin respuesta (15s)" : e instanceof Error ? e.message : "no se pudo consultar" });
     } finally {
       window.clearTimeout(timer);
       setChecking(false);
@@ -109,18 +108,8 @@ export default function Sincronizacion(props: { s: WebState; set: React.Dispatch
 
   return (
     <div className="grid gap-4 lg:grid-cols-2">
-      <Card title="Puente con la extensión" icon={<ArrowLeftRight size={18} />} sub="Manual, observable. Cada instalación conserva lo suyo hasta que importas.">
-        <div className="flex flex-wrap gap-2">
-          <Button onClick={download}><Download size={15} /> Exportar puente JSON</Button>
-          <label className="inline-flex h-9 cursor-pointer items-center gap-2 rounded-full bg-[#e8e8ed] px-4 text-sm font-medium hover:bg-[#d2d2d7]" htmlFor="br-file">
-            <Upload size={15} /> Importar puente
-          </label>
-          <input id="br-file" type="file" accept="application/json" className="hidden" onChange={upload} />
-        </div>
-        {msg ? <p className="mt-2 text-[13px] text-[#6e6e73]">{msg}</p> : null}
-      </Card>
       <Card title="Estado de la nube" icon={<CloudSun size={18} />}
-        sub="Lee /v1/status de tu Worker. Sin entrar a Cloudflare, sin tokens en el navegador."
+        sub="Tu Worker, sin entrar a Cloudflare."
         action={cloud ? <Badge tone={cloud.blocked ? "bad" : "ok"}>{cloud.blocked ? `bloqueado ${cloud.code ?? ""}` : "en línea"}</Badge> : <Badge>sin conectar</Badge>}>
         <div className="grid gap-3">
           <Field label="URL del Worker" htmlFor="wk-url">
@@ -131,7 +120,6 @@ export default function Sincronizacion(props: { s: WebState; set: React.Dispatch
               </Button>
             </div>
           </Field>
-          {cloudErr ? <p className="text-[13px] text-[#cf222e]">{cloudErr}</p> : null}
           {cloud ? (
             <>
               <p className="text-[13px] text-[#6e6e73]">
@@ -143,15 +131,23 @@ export default function Sincronizacion(props: { s: WebState; set: React.Dispatch
               <Bar label="Lecturas D1 / día" used={cloud.used.reads} cap={cloud.caps.d1ReadsDay} unit="filas" />
               <Bar label="Escrituras D1 / día" used={cloud.used.writes} cap={cloud.caps.d1WritesDay} unit="filas" />
             </>
-          ) : (
-            <p className="text-[13px] text-[#6e6e73]">Sin conectar: pega la URL de tu Worker desplegado. Mientras tanto todo queda local.</p>
-          )}
+          ) : null}
         </div>
       </Card>
-      <Card title="Sync automático" icon={<CloudOff size={18} />} sub="Requiere tu despliegue Cloudflare S/0 verificado."
-        action={<Badge tone="warn">pendiente</Badge>}>
-        <p className="text-[13px] text-[#6e6e73]">Al activarlo: enrolamiento por instalación, JWT corto, revocación, quota guard 50/70 y conflictos con elección visible. Nada se envía ante duda de costo (fail-closed).</p>
+      <Card title="Puente con la extensión" icon={<ArrowLeftRight size={18} />}>
+        <div className="flex flex-wrap gap-2">
+          <Button onClick={download}><Download size={15} /> Exportar puente JSON</Button>
+          <label className="inline-flex h-9 cursor-pointer items-center gap-2 rounded-full bg-[#e8e8ed] px-4 text-sm font-medium hover:bg-[#d2d2d7]" htmlFor="br-file">
+            <Upload size={15} /> Importar puente
+          </label>
+          <input id="br-file" type="file" accept="application/json" className="hidden" onChange={upload} />
+        </div>
       </Card>
+      {cloud && !cloud.blocked ? (
+        <div className="lg:col-span-2">
+          <ExplorerNube workerUrl={workerUrl} />
+        </div>
+      ) : null}
     </div>
   );
 }

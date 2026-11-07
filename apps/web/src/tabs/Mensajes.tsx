@@ -2,13 +2,13 @@ import React from "react";
 import { MessageSquarePlus, Search, Star } from "lucide-react";
 import { Button, Card, Field, Input, Textarea, Badge, Empty } from "../components/ui";
 import { newId, nowIso, audit, type WebState } from "../lib/store";
+import { toast } from "../hooks/use-toast";
 
 export default function Mensajes(props: { s: WebState; set: React.Dispatch<React.SetStateAction<WebState>> }) {
   const { s, set } = props;
   const [q, setQ] = React.useState("");
   const [title, setTitle] = React.useState("");
   const [body, setBody] = React.useState("Hola {{nombre}}, ");
-  const [err, setErr] = React.useState("");
 
   const rows = s.messages.filter((m) => {
     const n = q.trim().toLowerCase();
@@ -27,9 +27,9 @@ export default function Mensajes(props: { s: WebState; set: React.Dispatch<React
       }, "mensaje.crear", title.trim()));
       setTitle("");
       setBody("Hola {{nombre}}, ");
-      setErr("");
+      toast({ description: `"${title.trim()}" aprobado.` });
     } catch (ex) {
-      setErr(ex instanceof Error ? ex.message : "error");
+      toast({ variant: "destructive", description: ex instanceof Error ? ex.message : "error" });
     }
   }
 
@@ -47,7 +47,6 @@ export default function Mensajes(props: { s: WebState; set: React.Dispatch<React
           <form onSubmit={add} className="grid gap-3">
             <Field label="Título" htmlFor="m-title"><Input id="m-title" value={title} onChange={(e) => setTitle(e.target.value)} /></Field>
             <Field label="Cuerpo" htmlFor="m-body"><Textarea id="m-body" value={body} onChange={(e) => setBody(e.target.value)} /></Field>
-            {err ? <p className="text-[13px] text-[#cf222e]">{err}</p> : null}
             <div><Button type="submit">Aprobar mensaje</Button></div>
           </form>
         </Card>

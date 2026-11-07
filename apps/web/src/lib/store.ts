@@ -5,6 +5,7 @@ import React from "react";
 export interface ProductRow {
   id: string;
   name: string;
+  fabric?: string;
   description: string;
   status: "active" | "archived";
   created_at: string;
@@ -182,7 +183,7 @@ export function seedExample(): WebState {
   const now = nowIso();
   const vid = newId();
   return {
-    products: [{ id: pid, name: "Polo piqué (ejemplo)", description: "Algodón, verificado", status: "active", created_at: now, updated_at: now, revision: 1 }],
+    products: [{ id: pid, name: "Polo piqué (ejemplo)", fabric: "Algodón", description: "Algodón, verificado", status: "active", created_at: now, updated_at: now, revision: 1 }],
     variants: [{ id: vid, product_id: pid, label: "Talla M", size: "M", active: true, revision: 1 }],
     prices: [
       { id: newId(), product_id: pid, amount_minor: 4990, currency: "PEN", source: "ejemplo", verified_at: now, revision: 1 },

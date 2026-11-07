@@ -7,6 +7,7 @@ import Sincronizacion from "./tabs/Sincronizacion";
 import Respaldo from "./tabs/Respaldo";
 import Configuracion from "./tabs/Configuracion";
 import { useWebState } from "./lib/store";
+import { Toaster } from "./components/ui/toaster";
 
 const TABS = [
   { id: "catalogo", label: "Catálogo", icon: LayoutGrid },
@@ -68,6 +69,7 @@ export default function App() {
           Atajos de la extensión: Ctrl+Shift+Y selector · U/I/O favoritos. La extensión nunca envía sola.
         </p>
       </div>
+      <Toaster />
     </>
   );
 }
