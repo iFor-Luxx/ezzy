@@ -8,6 +8,8 @@ import Respaldo from "./tabs/Respaldo";
 import Configuracion from "./tabs/Configuracion";
 import { useWebState } from "./lib/store";
 import { Toaster } from "./components/ui/toast";
+import Login from "./screens/Login";
+import { isAuthed } from "./lib/auth";
 
 const TABS = [
   { id: "catalogo", label: "Catálogo", icon: LayoutGrid },
@@ -23,6 +25,16 @@ type TabId = (typeof TABS)[number]["id"];
 export default function App() {
   const [s, set] = useWebState();
   const [tab, setTab] = React.useState<TabId>("catalogo");
+  const [authed, setAuthed] = React.useState(isAuthed);
+
+  if (!authed) {
+    return (
+      <>
+        <Login onAuthed={() => setAuthed(true)} />
+        <Toaster />
+      </>
+    );
+  }
 
   return (
     <>
