@@ -13,11 +13,11 @@ export default function Contexto(props: { s: WebState; set: React.Dispatch<React
 
   function redact(): void {
     if (!raw.trim()) {
-      toast({ variant: "destructive", description: "Pega primero un fragmento (máx 4000)." });
+      toast({ title: "Error", description: "Pega primero un fragmento (máx 4000)." });
       return;
     }
     if (raw.length > 4000) {
-      toast({ variant: "destructive", description: "Fragmento > 4000 caracteres." });
+      toast({ title: "Error", description: "Fragmento > 4000 caracteres." });
       return;
     }
     setPrev(anonymizeForKnowledge(raw));
@@ -42,7 +42,7 @@ export default function Contexto(props: { s: WebState; set: React.Dispatch<React
             <ImageOff size={15} /> Bloqueada en esta versión
           </div>
           <Input id="cx-img" type="file" accept="image/*" className="hidden" aria-label="Imagen bloqueada"
-            onChange={(e) => { e.target.value = ""; toast({ variant: "destructive", description: "Imagen no soportada: pega el texto manualmente." }); }} />
+            onChange={(e) => { e.target.value = ""; toast({ title: "Error", description: "Imagen no soportada: pega el texto manualmente." }); }} />
         </Field>
       </Card>
     </div>

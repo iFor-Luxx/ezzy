@@ -77,7 +77,7 @@ export default function ExplorerNube(props: { workerUrl: string }) {
       setRecords(data as RemoteRecord[]);
       if (data.length === 0) toast({ description: "La nube está vacía." });
     } catch (e) {
-      toast({ variant: "destructive", description: e instanceof Error ? e.message : "no se pudo cargar" });
+      toast({ title: "Error", description: e instanceof Error ? e.message : "no se pudo cargar" });
     } finally {
       setBusy(false);
     }
@@ -85,7 +85,7 @@ export default function ExplorerNube(props: { workerUrl: string }) {
 
   async function enroll(): Promise<void> {
     if (!secret) {
-      toast({ variant: "destructive", description: "pega el secreto del propietario para enrolar" });
+      toast({ title: "Error", description: "pega el secreto del propietario para enrolar" });
       return;
     }
     setBusy(true);
@@ -119,7 +119,7 @@ export default function ExplorerNube(props: { workerUrl: string }) {
       toast({ description: "Instalación enrolada." });
       await load();
     } catch (e) {
-      toast({ variant: "destructive", description: e instanceof Error && e.name === "AbortError" ? "sin respuesta (15s)" : e instanceof Error ? e.message : "no se pudo enrolar" });
+      toast({ title: "Error", description: e instanceof Error && e.name === "AbortError" ? "sin respuesta (15s)" : e instanceof Error ? e.message : "no se pudo enrolar" });
     } finally {
       setBusy(false);
     }
@@ -133,7 +133,7 @@ export default function ExplorerNube(props: { workerUrl: string }) {
       if (typeof parsed !== "object" || parsed === null || Array.isArray(parsed)) throw new Error("debe ser un objeto JSON");
       payload = parsed as Record<string, unknown>;
     } catch (e) {
-      toast({ variant: "destructive", description: e instanceof Error ? e.message : "JSON inválido" });
+      toast({ title: "Error", description: e instanceof Error ? e.message : "JSON inválido" });
       return;
     }
     setBusy(true);
@@ -144,7 +144,7 @@ export default function ExplorerNube(props: { workerUrl: string }) {
       toast({ description: "Guardado." });
       await load();
     } catch (e) {
-      toast({ variant: "destructive", description: e instanceof Error ? e.message : "no se pudo guardar" });
+      toast({ title: "Error", description: e instanceof Error ? e.message : "no se pudo guardar" });
     } finally {
       setBusy(false);
     }
@@ -158,7 +158,7 @@ export default function ExplorerNube(props: { workerUrl: string }) {
       toast({ description: "Eliminado." });
       await load();
     } catch (e) {
-      toast({ variant: "destructive", description: e instanceof Error ? e.message : "no se pudo eliminar" });
+      toast({ title: "Error", description: e instanceof Error ? e.message : "no se pudo eliminar" });
     } finally {
       setBusy(false);
     }

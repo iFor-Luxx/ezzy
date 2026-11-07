@@ -70,7 +70,7 @@ export default function Sincronizacion(props: { s: WebState; set: React.Dispatch
         }, "puente.importar", f.name));
         toast({ description: `Importado: ${back.products.length} productos, ${back.messages.length} mensajes.` });
       } catch (ex) {
-        toast({ variant: "destructive", description: ex instanceof Error ? ex.message : "archivo inválido" });
+        toast({ title: "Error", description: ex instanceof Error ? ex.message : "archivo inválido" });
       }
     };
     r.readAsText(f);
@@ -80,7 +80,7 @@ export default function Sincronizacion(props: { s: WebState; set: React.Dispatch
   async function checkCloud(): Promise<void> {
     const base = workerUrl.trim().replace(/\/+$/, "");
     if (!base.startsWith("https://")) {
-      toast({ variant: "destructive", description: "pega la URL https de tu Worker desplegado" });
+      toast({ title: "Error", description: "pega la URL https de tu Worker desplegado" });
       return;
     }
     setChecking(true);
@@ -99,7 +99,7 @@ export default function Sincronizacion(props: { s: WebState; set: React.Dispatch
       }
       set((p) => audit(p, "nube.consultar", st.blocked ? `bloqueado ${st.code ?? ""}` : "ok"));
     } catch (e) {
-      toast({ variant: "destructive", description: e instanceof Error && e.name === "AbortError" ? "sin respuesta (15s)" : e instanceof Error ? e.message : "no se pudo consultar" });
+      toast({ title: "Error", description: e instanceof Error && e.name === "AbortError" ? "sin respuesta (15s)" : e instanceof Error ? e.message : "no se pudo consultar" });
     } finally {
       window.clearTimeout(timer);
       setChecking(false);

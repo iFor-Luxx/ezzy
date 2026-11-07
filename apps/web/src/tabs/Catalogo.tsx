@@ -57,7 +57,7 @@ export default function Catalogo(props: { s: WebState; set: React.Dispatch<React
       setTiers(defaultTiers());
       toast({ description: `"${product.name}" guardado con ${parsed.length} precio(s).` });
     } catch (ex) {
-      toast({ variant: "destructive", description: ex instanceof Error ? ex.message : "error" });
+      toast({ title: "Error", description: ex instanceof Error ? ex.message : "error" });
     }
   }
 
@@ -80,7 +80,7 @@ export default function Catalogo(props: { s: WebState; set: React.Dispatch<React
       });
       setFabric(out.trim());
     } catch (e) {
-      toast({ variant: "destructive", description: e instanceof Error ? e.message.replace(/oc_sk_\S+/g, "oc_sk_…") : "error" });
+      toast({ title: "Error", description: e instanceof Error ? e.message.replace(/oc_sk_\S+/g, "oc_sk_…") : "error" });
     } finally {
       setAiBusy(false);
     }
@@ -170,7 +170,7 @@ export default function Catalogo(props: { s: WebState; set: React.Dispatch<React
       });
       setEditingId(null);
     } catch (e) {
-      toast({ variant: "destructive", description: e instanceof Error ? e.message : "error" });
+      toast({ title: "Error", description: e instanceof Error ? e.message : "error" });
     }
   }
 

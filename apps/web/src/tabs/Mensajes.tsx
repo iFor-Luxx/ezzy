@@ -29,7 +29,7 @@ export default function Mensajes(props: { s: WebState; set: React.Dispatch<React
       setBody("Hola {{nombre}}, ");
       toast({ description: `"${title.trim()}" aprobado.` });
     } catch (ex) {
-      toast({ variant: "destructive", description: ex instanceof Error ? ex.message : "error" });
+      toast({ title: "Error", description: ex instanceof Error ? ex.message : "error" });
     }
   }
 

@@ -98,7 +98,7 @@ export default function Asistente(_props: { s: WebState; set: React.Dispatch<Rea
       setModel((m) => (m && ids.includes(m) ? m : (ids.find((id) => !isBlockedForSales(id)) ?? ids[0] ?? "")));
       lastFetched.current = k;
     } catch (e) {
-      toast({ variant: "destructive", description: e instanceof Error ? e.message.replace(/oc_sk_\S+/g, "oc_sk_…") : "no se pudo consultar" });
+      toast({ title: "Error", description: e instanceof Error ? e.message.replace(/oc_sk_\S+/g, "oc_sk_…") : "no se pudo consultar" });
     } finally {
       fetching.current = false;
       setLoadingModels(false);
@@ -117,7 +117,7 @@ export default function Asistente(_props: { s: WebState; set: React.Dispatch<Rea
 
   function saveKey(): void {
     if (!keyInput.startsWith("oc_sk_")) {
-      toast({ variant: "destructive", description: "pega tu key primero" });
+      toast({ title: "Error", description: "pega tu key primero" });
       return;
     }
     writeStored("saved", keyInput);
@@ -135,7 +135,7 @@ export default function Asistente(_props: { s: WebState; set: React.Dispatch<Rea
       const text = await pingApi({ baseURL, apiKey: k, modelId: model, text: "HOLA", sessionId, timeoutMs: 120000, stream: true, onToken: (t) => setDraft((d) => d + t) });
       setDraft(text);
     } catch (e) {
-      toast({ variant: "destructive", description: e instanceof Error ? e.message.replace(/oc_sk_\S+/g, "oc_sk_…") : "error" });
+      toast({ title: "Error", description: e instanceof Error ? e.message.replace(/oc_sk_\S+/g, "oc_sk_…") : "error" });
     } finally {
       setBusy(false);
     }
