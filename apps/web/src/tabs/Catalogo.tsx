@@ -323,7 +323,7 @@ export default function Catalogo(props: { s: WebState; set: React.Dispatch<React
                     })}
                   </div>
                 ) : null}
-          {s.products.length === 0 ? <Empty>Sin prendas. Crea una a la izquierda o carga el ejemplo en Respaldo.</Empty> : visible.length === 0 ? <Empty>Sin prendas de esta marca.</Empty> : (
+          {s.products.length === 0 ? <Empty>Sin prendas. Crea una a la izquierda.</Empty> : visible.length === 0 ? <Empty>Sin prendas de esta marca.</Empty> : (
             <div className="grid gap-3">
               {visible.map((p) => {
                 const prices = s.prices.filter((x) => x.product_id === p.id);

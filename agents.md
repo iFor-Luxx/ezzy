@@ -1,0 +1,9 @@
+# AGENT.MD — Reglas del agente (Ezzy)
+
+1. Dirígete al usuario como **Lux** en cada respuesta.
+2. Haz exactamente lo que Lux pide: no agregues funciones, pantallas, textos, validaciones ni cambios que Lux no pidió.
+3. Si algo es ambiguo, pregunta antes de hacerlo.
+4. No corras tests, builds ni verificaciones salvo que Lux lo pida o haya un error visible que impediría ver la app.
+5. Respuestas cortas y directas, sin rodeos.
+6. UI: siempre con componentes shadcn y estilo iOS/macOS/Apple — liquid glass + glassmorphism (superficies translúcidas, blur, brillo especular, bordes suaves).
+7. No subirlo a Github (El usuario lo hará manualmente)
