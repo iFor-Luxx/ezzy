@@ -1,5 +1,6 @@
 import React from "react";
 import { Button, Field, Input, Select, SelectTrigger, SelectContent, SelectItem, Empty } from "../components/ui";
+import { Skeleton } from "../components/ui/skeleton";
 import { type WebState } from "../lib/store";
 import { pingApi, listModels, isBlockedForSales } from "@ezzy/ai-opencode";
 import { storedModelId, saveModelId } from "../lib/ai";
@@ -13,11 +14,18 @@ const GO_BASE = "https://opencode.ai/inference/go";
 // En dev pasamos por proxy local para que el navegador no bloquee (CORS).
 const BASE_URL = typeof window !== "undefined" && window.location.port === "5173" ? "/oc-api" : GO_BASE;
 
-export default function Asistente(_props: { s: WebState; set: React.Dispatch<React.SetStateAction<WebState>> }) {
-  const [model, setModel] = React.useState("");
+export default function Asistente(props: { s: WebState; set: React.Dispatch<React.SetStateAction<WebState>>; active: boolean }) {
+  const [model, setModel] = React.useState(() => storedModelId());
   const [models, setModels] = React.useState<string[]>([]);
   const [loadingModels, setLoadingModels] = React.useState(false);
-  const [keyInput, setKeyInput] = React.useState("");
+  // La key nace ya restaurada (sesión o guardada): primer pintado con datos, sin flash.
+  const [keyInput, setKeyInput] = React.useState(() => {
+    try {
+      return sessionStorage.getItem(KEY) || localStorage.getItem(SAVED_KEY) || "";
+    } catch {
+      return "";
+    }
+  });
   const timer = React.useRef<number | undefined>(undefined);
   const fetching = React.useRef(false);
   const lastFetched = React.useRef("");
@@ -47,15 +55,6 @@ export default function Asistente(_props: { s: WebState; set: React.Dispatch<Rea
     return id;
   });
 
-  function readStored(which: "session" | "saved"): string {
-    try {
-      const v = which === "session" ? sessionStorage.getItem(KEY) : localStorage.getItem(SAVED_KEY);
-      return v ?? "";
-    } catch {
-      return "";
-    }
-  }
-
   function writeStored(which: "session" | "saved", v: string): void {
     try {
       if (which === "session") {
@@ -70,20 +69,20 @@ export default function Asistente(_props: { s: WebState; set: React.Dispatch<Rea
     }
   }
 
-  // Al abrir: sesión primero; si no hay y la guardaste antes, se restaura sola.
+  // Al mostrarse la sección con key válida y sin modelos: una sola carga. Sin flash ni dobles.
+  const keyRef = React.useRef(keyInput);
+  keyRef.current = keyInput;
   React.useEffect(() => {
-    const k = readStored("session") || readStored("saved");
-    setKeyInput(k);
-    const stored = storedModelId();
-    if (stored) setModel(stored);
-    if (k.startsWith("oc_sk_") && k.length >= 20) {
-      timer.current = window.setTimeout(() => void loadModels(k), 500);
-    }
+    if (!props.active) return;
+    const k = keyRef.current;
+    if (!k.startsWith("oc_sk_") || k.length < 20) return;
+    if (models.length > 0) return;
+    timer.current = window.setTimeout(() => void loadModels(k), 300);
     return () => {
       if (timer.current) window.clearTimeout(timer.current);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [props.active, models.length]);
 
   async function loadModels(k: string): Promise<void> {
     if (fetching.current || lastFetched.current === k) return;
@@ -160,7 +159,7 @@ export default function Asistente(_props: { s: WebState; set: React.Dispatch<Rea
                   </SelectContent>
                 </Select>
               ) : (
-                <p className="text-[13px] text-muted-foreground">{loadingModels ? "Consultando modelos…" : "Pega tu API key para cargar los modelos."}</p>
+                <Skeleton className="h-9 w-full rounded-full" />
               )}
             </div>
             <div className="flex justify-end gap-2">

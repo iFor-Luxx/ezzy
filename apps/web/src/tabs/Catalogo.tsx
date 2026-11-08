@@ -83,6 +83,8 @@ export default function Catalogo(props: { s: WebState; set: React.Dispatch<React
       const tela = fabric.trim();
       if (!tela) throw new Error("escribe la tela primero");
       setAiBusy(true);
+      // Stream: la descripción aparece en vivo, sin esperar todo al final.
+      let acc = "";
       const out = await pingApi({
         baseURL: inferenceBase(),
         apiKey: k,
@@ -90,6 +92,11 @@ export default function Catalogo(props: { s: WebState; set: React.Dispatch<React
         text: `Redacta la descripción de este material para ficha de prenda. Usa el nombre exacto tal cual, sin traducirlo ni generalizarlo. Investiga y destaca los beneficios reales de este material según su composición y uso ideal. Una sola frase corta (máx 25 palabras), precisa y clara, sin emojis, sin comillas ni explicaciones. Material: "${tela}"`,
         sessionId: crypto.randomUUID(),
         timeoutMs: 120000,
+        stream: true,
+        onToken: (t) => {
+          acc += t;
+          setFabric(acc);
+        },
       });
       setFabric(out.trim());
     } catch (e) {
