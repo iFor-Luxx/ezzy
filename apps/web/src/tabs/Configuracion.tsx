@@ -39,8 +39,8 @@ export default function Configuracion(props: { s: WebState; set: React.Dispatch<
       </aside>
       <div className="min-w-0 border-t border-border p-4 md:border-l md:border-t-0">
         <h1 className="mb-4 text-lg font-bold tracking-tight sm:text-[19px]">{current.label}</h1>
-        <div hidden={section !== "asistente"}><Asistente s={props.s} set={props.set} /></div>
-        <div hidden={section !== "uso"}><Uso /></div>
+        {section === "asistente" && <Asistente s={props.s} set={props.set} />}
+        {section === "uso" && <Uso />}
       </div>
     </div>
   );

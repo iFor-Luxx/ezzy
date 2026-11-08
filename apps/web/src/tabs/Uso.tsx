@@ -1,8 +1,8 @@
 import React from "react";
-import { Gauge, RefreshCw } from "lucide-react";
-import { Button, Card, Badge } from "../components/ui";
+import { Gauge } from "lucide-react";
+import { Card, Badge } from "../components/ui";
 import { pct, barTone, type CloudStatusView } from "../lib/cloud";
-import { ensureStatus, refreshStatus, getCachedStatus } from "../lib/sync";
+import { refreshStatus } from "../lib/sync";
 
 function Bar(props: { label: string; used: number; cap: number; unit: string }) {
   const p = pct(props.used, props.cap);
@@ -22,43 +22,24 @@ function Bar(props: { label: string; used: number; cap: number; unit: string }) 
 }
 
 // Uso real de tu servidor: contadores durables en D1 + filas guardadas.
-// 1 sola consulta por sesión; al volver se muestra lo guardado.
-// Solo Actualizar vuelve a pedir (ahí cambian los porcentajes).
+// 1 sola consulta al entrar a la sección. Para recargar, sal y vuelve a entrar.
 export default function Uso() {
-  const [st, setSt] = React.useState<CloudStatusView | null>(() => getCachedStatus());
+  const [st, setSt] = React.useState<CloudStatusView | null>(null);
   const [err, setErr] = React.useState<string | null>(null);
-  const [busy, setBusy] = React.useState(false);
 
   React.useEffect(() => {
-    if (getCachedStatus()) return;
     let alive = true;
-    setBusy(true);
-    ensureStatus()
+    refreshStatus()
       .then((s) => {
         if (alive) setSt(s);
       })
       .catch((e) => {
         if (alive) setErr(e instanceof Error ? e.message : "no se pudo consultar");
-      })
-      .finally(() => {
-        if (alive) setBusy(false);
       });
     return () => {
       alive = false;
     };
   }, []);
-
-  async function actualizar(): Promise<void> {
-    setBusy(true);
-    setErr(null);
-    try {
-      setSt(await refreshStatus());
-    } catch (e) {
-      setErr(e instanceof Error ? e.message : "no se pudo consultar");
-    } finally {
-      setBusy(false);
-    }
-  }
 
   return (
     <Card title="Uso de tu servidor" icon={<Gauge size={18} />} sub="Medido por tu Worker y guardado en D1. Igual desde cualquier PC."
@@ -77,11 +58,6 @@ export default function Uso() {
             <p className="text-[13px] text-muted-foreground">
               Guardado: {st.storage.records} registros · {st.storage.installations} instalaciones · {st.storage.keys} claves
             </p>
-            <div>
-              <Button variant="secondary" size="sm" onClick={() => void actualizar()} disabled={busy}>
-                <RefreshCw size={14} className={busy ? "animate-spin" : ""} /> {busy ? "" : "Actualizar"}
-              </Button>
-            </div>
           </>
         ) : null}
       </div>

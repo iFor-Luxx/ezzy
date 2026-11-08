@@ -191,25 +191,7 @@ async function fetchStatus(): Promise<CloudStatusView> {
   }
 }
 
-export function getCachedStatus(): CloudStatusView | null {
-  return statusCache;
-}
-
-/** Devuelve el estado: caché si hay, o la única petición en curso. */
-export async function ensureStatus(): Promise<CloudStatusView> {
-  if (statusCache) return statusCache;
-  if (!statusInflight) {
-    statusInflight = fetchStatus().then((s) => {
-      statusCache = s;
-      return s;
-    }).finally(() => {
-      statusInflight = null;
-    });
-  }
-  return statusInflight;
-}
-
-/** Refresca a la fuerza (botón Actualizar). 1 petición. */
+/** Refresca el estado (1 petición al entrar a la sección). */
 export async function refreshStatus(): Promise<CloudStatusView> {
   statusInflight = fetchStatus().then((s) => {
     statusCache = s;
