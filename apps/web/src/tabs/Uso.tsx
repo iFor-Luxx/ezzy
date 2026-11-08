@@ -1,30 +1,39 @@
 import React from "react";
-import { Gauge } from "lucide-react";
-import { Card, Badge } from "../components/ui";
+import { Card } from "../components/ui";
 import { Skeleton } from "../components/ui/skeleton";
 import { pct, barTone, type CloudStatusView } from "../lib/cloud";
 import { refreshStatus } from "../lib/sync";
 
-function Bar(props: { label: string; used: number; cap: number; unit: string }) {
-  const p = pct(props.used, props.cap);
+function Bar(props: { label: string; used: number | null; cap: number; unit: string }) {
+  const p = props.used === null ? 0 : pct(props.used, props.cap);
   const tone = barTone(p);
   const color = tone === "ok" ? "bg-chart-2" : tone === "warn" ? "bg-chart-4" : "bg-destructive";
   return (
     <div className="grid gap-1">
       <div className="flex items-baseline justify-between text-[13px]">
         <span className="text-muted-foreground">{props.label}</span>
-        <span className="mono text-xs">{props.used.toLocaleString("es-PE")} / {props.cap.toLocaleString("es-PE")} {props.unit} · {p.toFixed(1)}%</span>
+        {props.used === null ? (
+          <Skeleton className="h-3 w-44" />
+        ) : (
+          <span className="mono text-xs">{props.used.toLocaleString("es-PE")} / {props.cap.toLocaleString("es-PE")} {props.unit} · {p.toFixed(1)}%</span>
+        )}
       </div>
       <div className="h-2 overflow-hidden rounded-full bg-muted">
-        <div className={`h-full rounded-full ${color}`} style={{ width: `${Math.max(p, 2)}%` }} />
+        {props.used === null ? (
+          <Skeleton className="h-full w-full rounded-full" />
+        ) : (
+          <div className={`h-full rounded-full ${color}`} style={{ width: `${Math.max(p, 2)}%` }} />
+        )}
       </div>
     </div>
   );
 }
 
 // Uso real de tu servidor: contadores durables en D1 + filas guardadas.
-// 1 sola consulta a la vez. Al volver a la sección se trae fresco sin parpadear:
-// si ya hay datos se muestran hasta que llegan los nuevos; si no hay, esqueletos.
+// 1 sola consulta a la vez. Estructura fija: solo números y barras llevan
+// esqueleto mientras cargan; al volver se muestra lo guardado sin parpadear.
+const CAPS = { workersReqDay: 100000, d1ReadsDay: 5000000, d1WritesDay: 100000 };
+
 export default function Uso(props: { active: boolean }) {
   const [st, setSt] = React.useState<CloudStatusView | null>(null);
   const [err, setErr] = React.useState<string | null>(null);
@@ -55,36 +64,15 @@ export default function Uso(props: { active: boolean }) {
   }, [props.active]);
 
   return (
-    <Card title="Uso de tu servidor" icon={<Gauge size={18} />} sub="Medido por tu Worker y guardado en D1. Igual desde cualquier PC."
-      action={st ? <Badge tone={st.blocked ? "bad" : "ok"}>{st.blocked ? `bloqueado ${st.code ?? ""}` : "en línea"}</Badge> : undefined}>
+    <Card>
       <div className="grid gap-3">
         {err ? <p className="text-[13px] text-destructive">{err}</p> : null}
-        {!st && !err ? (
-          <div className="grid gap-3" aria-busy="true" aria-label="Cargando uso">
-            {[0, 1, 2].map((i) => (
-              <div key={i} className="grid gap-1">
-                <div className="flex items-baseline justify-between">
-                  <Skeleton className="h-3 w-28" />
-                  <Skeleton className="h-3 w-40" />
-                </div>
-                <Skeleton className="h-2 w-full rounded-full" />
-              </div>
-            ))}
-          </div>
-        ) : null}
-        {st ? (
-          <>
-            <p className="text-[13px] text-muted-foreground">
-              Día {st.day || "—"} · Plan {st.plan} · {st.entities} entidades · {st.installations} instalaciones
-            </p>
-            <Bar label="Peticiones / día" used={st.used.req} cap={st.caps.workersReqDay} unit="req" />
-            <Bar label="Lecturas D1 / día" used={st.used.reads} cap={st.caps.d1ReadsDay} unit="filas" />
-            <Bar label="Escrituras D1 / día" used={st.used.writes} cap={st.caps.d1WritesDay} unit="filas" />
-            <p className="text-[13px] text-muted-foreground">
-              Guardado: {st.storage.records} registros · {st.storage.installations} instalaciones · {st.storage.keys} claves
-            </p>
-          </>
-        ) : null}
+        <Bar label="Peticiones / día" used={st ? st.used.req : null} cap={st?.caps.workersReqDay ?? CAPS.workersReqDay} unit="req" />
+        <Bar label="Lecturas D1 / día" used={st ? st.used.reads : null} cap={st?.caps.d1ReadsDay ?? CAPS.d1ReadsDay} unit="filas" />
+        <Bar label="Escrituras D1 / día" used={st ? st.used.writes : null} cap={st?.caps.d1WritesDay ?? CAPS.d1WritesDay} unit="filas" />
+        <p className="text-[13px] text-muted-foreground">
+          Hoy {st?.day ?? "—"} · Plan {st?.plan ?? "—"} · {st ? `${st.storage.records} registros · ${st.storage.installations} instalaciones · ${st.storage.keys} claves` : "—"}
+        </p>
       </div>
     </Card>
   );
