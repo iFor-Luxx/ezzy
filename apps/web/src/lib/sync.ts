@@ -2,7 +2,7 @@
 // Costo cero: sin polling ni intervalos. 1 GET /v1/data por sesión,
 // 1 POST /v1/sync/push por guardado (lote), nada más.
 import { getInstallationId, getWorkerUrl } from "./auth";
-import { buildTombstone, buildUpsert, type RemoteRecord, type SyncChange } from "./cloud";
+import { buildTombstone, buildUpsert, parseStatus, type CloudStatusView, type RemoteRecord, type SyncChange } from "./cloud";
 import { audit, nowIso, type WebState } from "./store";
 
 export function cloudBase(): string {
@@ -170,6 +170,54 @@ export async function refreshRawRecords(): Promise<RemoteRecord[]> {
     rawInflight = null;
   });
   return rawInflight;
+}
+
+// Estado del servidor en caché: 1 sola consulta por sesión.
+// Al volver a la sección se muestra lo guardado sin redibujar ni pedir de nuevo.
+let statusCache: CloudStatusView | null = null;
+let statusInflight: Promise<CloudStatusView> | null = null;
+
+async function fetchStatus(): Promise<CloudStatusView> {
+  const base = cloudBase();
+  if (!base.startsWith("https://")) throw new Error("servidor no configurado");
+  const ctrl = new AbortController();
+  const timer = window.setTimeout(() => ctrl.abort(), 15000);
+  try {
+    const res = await fetch(`${base}/v1/status`, { signal: ctrl.signal });
+    if (!res.ok) throw new Error(`el servidor respondió ${res.status}`);
+    return parseStatus(await res.json());
+  } finally {
+    window.clearTimeout(timer);
+  }
+}
+
+export function getCachedStatus(): CloudStatusView | null {
+  return statusCache;
+}
+
+/** Devuelve el estado: caché si hay, o la única petición en curso. */
+export async function ensureStatus(): Promise<CloudStatusView> {
+  if (statusCache) return statusCache;
+  if (!statusInflight) {
+    statusInflight = fetchStatus().then((s) => {
+      statusCache = s;
+      return s;
+    }).finally(() => {
+      statusInflight = null;
+    });
+  }
+  return statusInflight;
+}
+
+/** Refresca a la fuerza (botón Actualizar). 1 petición. */
+export async function refreshStatus(): Promise<CloudStatusView> {
+  statusInflight = fetchStatus().then((s) => {
+    statusCache = s;
+    return s;
+  }).finally(() => {
+    statusInflight = null;
+  });
+  return statusInflight;
 }
 
 export function productPayload(p: { id: string; name: string; fabric?: string; brand?: string; description: string; status: string; created_at: string; updated_at: string }): Record<string, unknown> {

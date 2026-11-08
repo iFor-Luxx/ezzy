@@ -1,8 +1,8 @@
 import React from "react";
-import { Gauge } from "lucide-react";
-import { Card, Badge } from "../components/ui";
-import { parseStatus, pct, barTone, type CloudStatusView } from "../lib/cloud";
-import { cloudBase } from "../lib/sync";
+import { Gauge, RefreshCw } from "lucide-react";
+import { Button, Card, Badge } from "../components/ui";
+import { pct, barTone, type CloudStatusView } from "../lib/cloud";
+import { ensureStatus, refreshStatus, getCachedStatus } from "../lib/sync";
 
 function Bar(props: { label: string; used: number; cap: number; unit: string }) {
   const p = pct(props.used, props.cap);
@@ -22,31 +22,43 @@ function Bar(props: { label: string; used: number; cap: number; unit: string }) 
 }
 
 // Uso real de tu servidor: contadores durables en D1 + filas guardadas.
-// Se ve igual desde cualquier PC. Plan free: todo debe tender a 0%.
+// 1 sola consulta por sesión; al volver se muestra lo guardado.
+// Solo Actualizar vuelve a pedir (ahí cambian los porcentajes).
 export default function Uso() {
-  const [st, setSt] = React.useState<CloudStatusView | null>(null);
+  const [st, setSt] = React.useState<CloudStatusView | null>(() => getCachedStatus());
   const [err, setErr] = React.useState<string | null>(null);
+  const [busy, setBusy] = React.useState(false);
 
   React.useEffect(() => {
+    if (getCachedStatus()) return;
     let alive = true;
-    const ctrl = new AbortController();
-    const timer = window.setTimeout(() => ctrl.abort(), 15000);
-    fetch(`${cloudBase()}/v1/status`, { signal: ctrl.signal })
-      .then(async (res) => {
-        if (!res.ok) throw new Error(`el servidor respondió ${res.status}`);
-        const parsed = parseStatus(await res.json());
-        if (alive) setSt(parsed);
+    setBusy(true);
+    ensureStatus()
+      .then((s) => {
+        if (alive) setSt(s);
       })
       .catch((e) => {
         if (alive) setErr(e instanceof Error ? e.message : "no se pudo consultar");
       })
-      .finally(() => window.clearTimeout(timer));
+      .finally(() => {
+        if (alive) setBusy(false);
+      });
     return () => {
       alive = false;
-      window.clearTimeout(timer);
-      ctrl.abort();
     };
   }, []);
+
+  async function actualizar(): Promise<void> {
+    setBusy(true);
+    setErr(null);
+    try {
+      setSt(await refreshStatus());
+    } catch (e) {
+      setErr(e instanceof Error ? e.message : "no se pudo consultar");
+    } finally {
+      setBusy(false);
+    }
+  }
 
   return (
     <Card title="Uso de tu servidor" icon={<Gauge size={18} />} sub="Medido por tu Worker y guardado en D1. Igual desde cualquier PC."
@@ -65,6 +77,11 @@ export default function Uso() {
             <p className="text-[13px] text-muted-foreground">
               Guardado: {st.storage.records} registros · {st.storage.installations} instalaciones · {st.storage.keys} claves
             </p>
+            <div>
+              <Button variant="secondary" size="sm" onClick={() => void actualizar()} disabled={busy}>
+                <RefreshCw size={14} className={busy ? "animate-spin" : ""} /> {busy ? "" : "Actualizar"}
+              </Button>
+            </div>
           </>
         ) : null}
       </div>
