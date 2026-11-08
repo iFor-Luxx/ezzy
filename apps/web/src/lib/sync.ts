@@ -101,14 +101,8 @@ export function recordsToState(records: RemoteRecord[], prevAudits: WebState["au
 
 /** Descarga todo una vez (al entrar). 1 sola petición. */
 export async function pullWebState(prevAudits: WebState["audits"] = []): Promise<WebState> {
-  const base = cloudBase();
-  const inst = cloudInstallation();
-  if (!base.startsWith("https://")) throw new Error("servidor no configurado");
-  if (!inst) throw new Error("instalación no configurada");
-  const out = await cloudFetch(base, inst, "/v1/data");
-  const data = out["data"];
-  if (!Array.isArray(data)) throw new Error("respuesta inválida");
-  return recordsToState(data as RemoteRecord[], prevAudits);
+  const records = await ensureRawRecords();
+  return recordsToState(records, prevAudits);
 }
 
 /** Sube un lote (1 petición). Lanza si hay conflicto: recarga y reintenta. */
@@ -126,6 +120,56 @@ export async function pushChanges(changes: SyncChange[]): Promise<void> {
   if (Array.isArray(conflicts) && conflicts.length > 0) {
     throw new Error("conflicto: otro avanzó primero, recarga y reintenta");
   }
+  invalidateRecords(); // lo siguiente que lea la nube trae fresco (1 sola petición)
+}
+
+// Caché de sesión: una sola descarga de /v1/data aunque varios componentes la pidan.
+// Sin polling ni refetch al cambiar de pestaña. Las mutaciones invalidan.
+let rawCache: RemoteRecord[] | null = null;
+let rawInflight: Promise<RemoteRecord[]> | null = null;
+
+async function fetchRaw(): Promise<RemoteRecord[]> {
+  const base = cloudBase();
+  const inst = cloudInstallation();
+  if (!base.startsWith("https://")) throw new Error("servidor no configurado");
+  if (!inst) throw new Error("instalación no configurada");
+  const out = await cloudFetch(base, inst, "/v1/data");
+  const data = out["data"];
+  if (!Array.isArray(data)) throw new Error("respuesta inválida");
+  return data as RemoteRecord[];
+}
+
+export function getCachedRecords(): RemoteRecord[] | null {
+  return rawCache;
+}
+
+export function invalidateRecords(): void {
+  rawCache = null;
+}
+
+/** Devuelve registros: caché si hay, o la única petición en curso (single-flight). */
+export async function ensureRawRecords(): Promise<RemoteRecord[]> {
+  if (rawCache) return rawCache;
+  if (!rawInflight) {
+    rawInflight = fetchRaw().then((r) => {
+      rawCache = r;
+      return r;
+    }).finally(() => {
+      rawInflight = null;
+    });
+  }
+  return rawInflight;
+}
+
+/** Refresca a la fuerza (botón recargar, guardar, enrolar). 1 petición. */
+export async function refreshRawRecords(): Promise<RemoteRecord[]> {
+  rawInflight = fetchRaw().then((r) => {
+    rawCache = r;
+    return r;
+  }).finally(() => {
+    rawInflight = null;
+  });
+  return rawInflight;
 }
 
 export function productPayload(p: { id: string; name: string; fabric?: string; brand?: string; description: string; status: string; created_at: string; updated_at: string }): Record<string, unknown> {

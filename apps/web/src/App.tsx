@@ -28,6 +28,13 @@ export default function App() {
   const [tab, setTab] = React.useState<TabId>("catalogo");
   const [authed, setAuthed] = React.useState(isAuthed);
   const [cloud, setCloud] = React.useState<"idle" | "loading" | "ready" | "error">("idle");
+  // Pestañas visitadas: se montan una vez y quedan montadas (hidden).
+  // Así no se pierde estado (tokens, formularios, datos) ni se repiten llamadas al cambiar.
+  const [visited, setVisited] = React.useState<TabId[]>(["catalogo"]);
+  function go(id: TabId): void {
+    setTab(id);
+    setVisited((v) => (v.includes(id) ? v : [...v, id]));
+  }
 
   // Fuente de verdad: la nube. Al entrar (cualquier PC), una sola descarga.
   React.useEffect(() => {
@@ -84,7 +91,7 @@ export default function App() {
                 key={t.id}
                 role="tab"
                 aria-selected={active}
-                onClick={() => setTab(t.id)}
+                onClick={() => go(t.id)}
                 className={`flex items-center gap-1.5 whitespace-nowrap rounded-full border px-3 py-1.5 text-xs font-medium transition-all sm:px-3.5 sm:py-2 sm:text-[13px] ${
                   active ? "border-border bg-card text-foreground shadow-sm" : "border-transparent text-muted-foreground hover:text-foreground"
                 }`}
@@ -96,12 +103,12 @@ export default function App() {
           })}
         </nav>
         <main role="tabpanel">
-          {tab === "catalogo" && <Catalogo s={s} set={set} />}
-          {tab === "mensajes" && <Mensajes s={s} set={set} />}
-          {tab === "config" && <Configuracion s={s} set={set} />}
-          {tab === "contexto" && <Contexto s={s} set={set} />}
-          {tab === "sync" && <Sincronizacion s={s} set={set} />}
-          {tab === "respaldo" && <Respaldo s={s} set={set} />}
+          {visited.includes("catalogo") && <div hidden={tab !== "catalogo"}><Catalogo s={s} set={set} /></div>}
+          {visited.includes("mensajes") && <div hidden={tab !== "mensajes"}><Mensajes s={s} set={set} /></div>}
+          {visited.includes("config") && <div hidden={tab !== "config"}><Configuracion s={s} set={set} /></div>}
+          {visited.includes("contexto") && <div hidden={tab !== "contexto"}><Contexto s={s} set={set} /></div>}
+          {visited.includes("sync") && <div hidden={tab !== "sync"}><Sincronizacion s={s} set={set} /></div>}
+          {visited.includes("respaldo") && <div hidden={tab !== "respaldo"}><Respaldo s={s} set={set} /></div>}
         </main>
         <p className="mt-4 text-center text-xs text-muted-foreground sm:mt-6 sm:text-[13px]">
           Atajos de la extensión: Ctrl+Shift+Y selector · U/I/O favoritos. La extensión nunca envía sola.

@@ -2,6 +2,7 @@ import React from "react";
 import { Database, Pencil, Trash2, RefreshCw, KeyRound } from "lucide-react";
 import { Button, Card, Field, Input, Textarea, Badge } from "../components/ui";
 import { buildUpsert, buildTombstone, type RemoteRecord, type SyncChange } from "../lib/cloud";
+import { ensureRawRecords, refreshRawRecords, getCachedRecords } from "../lib/sync";
 import { toast } from "../components/ui/toast";
 
 // Datos en la nube: ver, editar y eliminar registros del Worker desplegado.
@@ -45,7 +46,7 @@ export default function ExplorerNube(props: { workerUrl: string }) {
     }
   });
   const [secret, setSecret] = React.useState("");
-  const [records, setRecords] = React.useState<RemoteRecord[] | null>(null);
+  const [records, setRecords] = React.useState<RemoteRecord[] | null>(() => getCachedRecords());
   const [openId, setOpenId] = React.useState<string | null>(null);
   const [editing, setEditing] = React.useState<{ key: string; text: string } | null>(null);
   const [busy, setBusy] = React.useState(false);
@@ -69,13 +70,12 @@ export default function ExplorerNube(props: { workerUrl: string }) {
     }
   }
 
-  async function load(): Promise<void> {
+  async function load(force = false): Promise<void> {
     setBusy(true);
     try {
-      const out = await api(needBase(), "/v1/data", instId.trim());
-      const data = out["data"];
-      if (!Array.isArray(data)) throw new Error("respuesta inválida");
-      setRecords(data as RemoteRecord[]);
+      needBase();
+      const data = force ? await refreshRawRecords() : await ensureRawRecords();
+      setRecords(data);
       if (data.length === 0) toast.add({ description: "La nube está vacía." });
     } catch (e) {
       toast.add({ title: "Error", description: e instanceof Error ? e.message : "no se pudo cargar" });
@@ -118,7 +118,7 @@ export default function ExplorerNube(props: { workerUrl: string }) {
       }
       setSecret("");
       toast.add({ description: "Instalación enrolada." });
-      await load();
+      await load(true);
     } catch (e) {
       toast.add({ title: "Error", description: e instanceof Error && e.name === "AbortError" ? "sin respuesta (15s)" : e instanceof Error ? e.message : "no se pudo enrolar" });
     } finally {
@@ -143,7 +143,7 @@ export default function ExplorerNube(props: { workerUrl: string }) {
       setEditing(null);
       setOpenId(null);
       toast.add({ description: "Guardado." });
-      await load();
+      await load(true);
     } catch (e) {
       toast.add({ title: "Error", description: e instanceof Error ? e.message : "no se pudo guardar" });
     } finally {
@@ -157,7 +157,7 @@ export default function ExplorerNube(props: { workerUrl: string }) {
     try {
       await push([buildTombstone(rec.entity_type, rec.entity_id, rec.revision)]);
       toast.add({ description: "Eliminado." });
-      await load();
+      await load(true);
     } catch (e) {
       toast.add({ title: "Error", description: e instanceof Error ? e.message : "no se pudo eliminar" });
     } finally {
@@ -169,7 +169,7 @@ export default function ExplorerNube(props: { workerUrl: string }) {
   React.useEffect(() => {
     if (autoRef.current) return;
     autoRef.current = true;
-    if (base.startsWith("https://") && instId.trim()) void load();
+    if (base.startsWith("https://") && instId.trim()) void load(false);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -201,7 +201,7 @@ export default function ExplorerNube(props: { workerUrl: string }) {
           </Field>
         </div>
         <div>
-          <Button variant="secondary" onClick={() => void load()} disabled={busy}>
+          <Button variant="secondary" onClick={() => void load(true)} disabled={busy}>
             <RefreshCw size={15} className={busy ? "animate-spin" : ""} /> {busy ? "" : "Cargar datos"}
           </Button>
         </div>
