@@ -1,6 +1,5 @@
 import React from "react";
-import { Sparkles, ClipboardCopy } from "lucide-react";
-import { Button, Card, Field, Input, Select, SelectTrigger, SelectContent, SelectItem, Badge, Empty } from "../components/ui";
+import { Button, Field, Input, Select, SelectTrigger, SelectContent, SelectItem, Empty } from "../components/ui";
 import { type WebState } from "../lib/store";
 import { pingApi, listModels, isBlockedForSales } from "@ezzy/ai-opencode";
 import { storedModelId, saveModelId } from "../lib/ai";
@@ -142,14 +141,12 @@ export default function Asistente(_props: { s: WebState; set: React.Dispatch<Rea
   }
 
   return (
-    <Card label="Asistente IA">
-      <div className="grid items-start gap-3 lg:grid-cols-[minmax(0,2fr)_auto_minmax(0,3fr)]">
-        <div>
-          <div className="mb-1 flex items-center gap-2">
-            <span className="text-primary"><Sparkles size={18} /></span>
-            <h2 className="text-base font-semibold tracking-tight sm:text-[17px]">Generar propuesta</h2>
-          </div>
-          <div className="mt-3 grid gap-3">
+    <>
+      <h1 className="px-3 text-lg font-bold tracking-tight sm:text-[19px]">Asistente IA</h1>
+      <div aria-hidden="true" className="-mx-4 mb-3 mt-3 h-px bg-border" />
+      <div className="grid items-center gap-3 px-3 lg:grid-cols-[minmax(0,3fr)_auto_minmax(0,2fr)]">
+        <div className="min-w-0">
+          <div className="grid gap-3">
             <Field label="API key" htmlFor="ai-key">
               <Input id="ai-key" type="password" autoComplete="off" value={keyInput} onChange={(e) => onKeyChange(e.target.value)} />
             </Field>
@@ -172,16 +169,11 @@ export default function Asistente(_props: { s: WebState; set: React.Dispatch<Rea
             </div>
           </div>
         </div>
-        <div aria-hidden="true" className="bg-border max-lg:-mx-4 max-lg:h-px max-lg:w-auto lg:-my-4 lg:w-px lg:self-stretch" />
-        <div>
-          <div className="mb-1 flex items-center gap-2">
-            <span className="text-primary"><ClipboardCopy size={18} /></span>
-            <h2 className="text-base font-semibold tracking-tight sm:text-[17px]">Borrador</h2>
-            {draft && !busy ? <span className="ml-auto"><Badge tone="ok">ok</Badge></span> : null}
-          </div>
-          {draft ? <p className="ez-pre mt-3">{draft}</p> : <Empty>Sin respuesta todavía. Pulsa Test.</Empty>}
+        <div aria-hidden="true" className="bg-border max-lg:-mx-7 max-lg:h-px max-lg:w-auto lg:-mb-4 lg:-mt-3 lg:w-px lg:self-stretch" />
+        <div className="min-w-0">
+          {draft ? <p className="ez-pre">{draft}</p> : <Empty>Sin respuesta todavía. Pulsa Test.</Empty>}
         </div>
       </div>
-    </Card>
+    </>
   );
 }

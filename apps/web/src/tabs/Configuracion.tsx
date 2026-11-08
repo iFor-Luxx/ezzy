@@ -13,7 +13,6 @@ const SECTIONS = [
 
 export default function Configuracion(props: { s: WebState; set: React.Dispatch<React.SetStateAction<WebState>> }) {
   const [section, setSection] = React.useState<string>("asistente");
-  const current = SECTIONS.find((x) => x.id === section) ?? SECTIONS[0];
   return (
     <div className="grid overflow-hidden rounded-2xl border border-border bg-card md:grid-cols-[240px_1fr]">
       <aside aria-label="Ajustes" className="bg-muted/80 p-2">
@@ -38,7 +37,6 @@ export default function Configuracion(props: { s: WebState; set: React.Dispatch<
         })}
       </aside>
       <div className="min-w-0 border-t border-border p-4 md:border-l md:border-t-0">
-        <h1 className="mb-4 text-lg font-bold tracking-tight sm:text-[19px]">{current.label}</h1>
         <div hidden={section !== "asistente"}><Asistente s={props.s} set={props.set} /></div>
         <div hidden={section !== "uso"}><Uso active={section === "uso"} /></div>
       </div>

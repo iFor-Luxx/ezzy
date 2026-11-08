@@ -1,5 +1,4 @@
 import React from "react";
-import { Card } from "../components/ui";
 import { Skeleton } from "../components/ui/skeleton";
 import { pct, barTone, type CloudStatusView } from "../lib/cloud";
 import { refreshStatus } from "../lib/sync";
@@ -64,16 +63,15 @@ export default function Uso(props: { active: boolean }) {
   }, [props.active]);
 
   return (
-    <Card>
-      <div className="grid gap-3">
-        {err ? <p className="text-[13px] text-destructive">{err}</p> : null}
-        <Bar label="Peticiones / día" used={st ? st.used.req : null} cap={st?.caps.workersReqDay ?? CAPS.workersReqDay} unit="req" />
-        <Bar label="Lecturas D1 / día" used={st ? st.used.reads : null} cap={st?.caps.d1ReadsDay ?? CAPS.d1ReadsDay} unit="filas" />
-        <Bar label="Escrituras D1 / día" used={st ? st.used.writes : null} cap={st?.caps.d1WritesDay ?? CAPS.d1WritesDay} unit="filas" />
-        <p className="text-[13px] text-muted-foreground">
-          Hoy {st?.day ?? "—"} · Plan {st?.plan ?? "—"} · {st ? `${st.storage.records} registros · ${st.storage.installations} instalaciones · ${st.storage.keys} claves` : "—"}
-        </p>
-      </div>
-    </Card>
+    <div className="grid gap-3">
+      <h1 className="text-lg font-bold tracking-tight sm:text-[19px]">Uso</h1>
+      {err ? <p className="text-[13px] text-destructive">{err}</p> : null}
+      <Bar label="Peticiones / día" used={st ? st.used.req : null} cap={st?.caps.workersReqDay ?? CAPS.workersReqDay} unit="req" />
+      <Bar label="Lecturas D1 / día" used={st ? st.used.reads : null} cap={st?.caps.d1ReadsDay ?? CAPS.d1ReadsDay} unit="filas" />
+      <Bar label="Escrituras D1 / día" used={st ? st.used.writes : null} cap={st?.caps.d1WritesDay ?? CAPS.d1WritesDay} unit="filas" />
+      <p className="text-[13px] text-muted-foreground">
+        Hoy {st?.day ?? "—"} · Plan {st?.plan ?? "—"} · {st ? `${st.storage.records} registros · ${st.storage.installations} instalaciones · ${st.storage.keys} claves` : "—"}
+      </p>
+    </div>
   );
 }
