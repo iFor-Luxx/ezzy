@@ -185,7 +185,7 @@ export default function ExplorerNube(props: { workerUrl: string }) {
             <div className="relative">
               <Input id="ex-sec" type="password" autoComplete="off" value={secret} onChange={(e) => setSecret(e.target.value)} className="pr-11" />
               <button type="button" aria-label="Enrolar instalación" title="Enrolar" onClick={() => void enroll()} disabled={busy}
-                className="absolute right-1.5 top-1/2 flex h-7 w-7 -translate-y-1/2 items-center justify-center rounded-full text-(--ez-accent) transition hover:bg-muted active:scale-95 disabled:opacity-50">
+                className="absolute right-1.5 top-1/2 flex h-7 w-7 -translate-y-1/2 items-center justify-center rounded-full text-primary transition hover:bg-muted active:scale-95 disabled:opacity-50">
                 <KeyRound size={16} />
               </button>
             </div>
@@ -197,9 +197,9 @@ export default function ExplorerNube(props: { workerUrl: string }) {
           </Button>
         </div>
         {records === null ? (
-          <p className="text-[13px] text-(--ez-muted)">Sin cargar. Enrolá la instalación y cargá los datos.</p>
+          <p className="text-[13px] text-muted-foreground">Sin cargar. Enrolá la instalación y cargá los datos.</p>
         ) : records.length === 0 ? (
-          <p className="text-[13px] text-(--ez-muted)">La nube está vacía.</p>
+          <p className="text-[13px] text-muted-foreground">La nube está vacía.</p>
         ) : (
           groups.map(([type, rows]) => (
             <div key={type}>
@@ -213,16 +213,16 @@ export default function ExplorerNube(props: { workerUrl: string }) {
                     <div key={key} className="border-t border-border first:border-t-0">
                       <div className="flex items-center gap-2 px-3 py-2">
                         <button className="min-w-0 flex-1 truncate text-left font-mono text-xs" onClick={() => { setOpenId(isOpen ? null : key); setEditing(null); }}>
-                          {r.entity_id.slice(0, 8)}… <span className="text-(--ez-muted)">rev {r.revision}</span>
+                          {r.entity_id.slice(0, 8)}… <span className="text-muted-foreground">rev {r.revision}</span>
                         </button>
                         {r.deleted ? <Badge tone="bad">eliminado</Badge> : null}
                         {!r.deleted && (
                           <>
-                            <button aria-label="Ver" className="text-[13px] text-(--ez-accent)" onClick={() => { setOpenId(isOpen ? null : key); setEditing(null); }}>
+                            <button aria-label="Ver" className="text-[13px] text-primary" onClick={() => { setOpenId(isOpen ? null : key); setEditing(null); }}>
                               {isOpen ? "cerrar" : "ver"}
                             </button>
                             <button aria-label="Editar" onClick={() => { setOpenId(key); setEditing({ key, text: JSON.stringify(r.dto ?? {}, null, 2) }); }}
-                              className="flex h-7 w-7 items-center justify-center rounded-full text-(--ez-muted) hover:bg-muted">
+                              className="flex h-7 w-7 items-center justify-center rounded-full text-muted-foreground hover:bg-muted">
                               <Pencil size={14} />
                             </button>
                             <button aria-label="Eliminar" onClick={() => void remove(r)}

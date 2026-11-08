@@ -18,6 +18,8 @@ export function getInstallationId(): string {
 }
 
 export function getWorkerUrl(): string {
+  // Servidor único: el env manda; localStorage solo como respaldo en dev.
+  if (DEFAULT_WORKER_URL.trim().startsWith("https://")) return DEFAULT_WORKER_URL.trim();
   try {
     return localStorage.getItem(WORKER_KEY) ?? DEFAULT_WORKER_URL;
   } catch {

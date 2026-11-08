@@ -6,6 +6,7 @@ export interface ProductRow {
   id: string;
   name: string;
   fabric?: string;
+  brand?: string;
   description: string;
   status: "active" | "archived";
   created_at: string;

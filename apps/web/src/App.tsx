@@ -39,17 +39,17 @@ export default function App() {
   return (
     <>
       <header className="ez-topbar">
-        <div className="mx-auto flex max-w-6xl items-center gap-3 px-5 py-3">
-          <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-(--ez-ink) text-[17px] font-bold text-white">e</div>
+        <div className="mx-auto flex max-w-4xl items-center gap-2.5 px-4 py-2.5 sm:gap-3 sm:px-6 sm:py-3">
+          <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-primary text-base font-bold text-primary-foreground sm:h-9 sm:w-9 sm:text-[17px]">e</div>
           <div>
-            <p className="text-[17px] font-semibold leading-tight tracking-tight">Ezzy</p>
-            <p className="text-xs leading-tight text-(--ez-muted)">Panel privado · tus datos quedan en este navegador</p>
+            <p className="text-base font-semibold leading-tight tracking-tight sm:text-[17px]">Ezzy</p>
+            <p className="text-xs leading-tight text-muted-foreground">Panel privado · tus datos quedan en este navegador</p>
           </div>
-          <span className="ml-auto hidden rounded-full bg-(--ez-ok)/10 px-3 py-1 text-xs font-medium text-(--ez-ok) sm:inline">local</span>
+          <span className="ml-auto hidden rounded-full bg-chart-2/10 px-3 py-1 text-xs font-medium text-chart-2 sm:inline">local</span>
         </div>
       </header>
-      <div className="mx-auto max-w-6xl px-5 py-5">
-        <nav className="ez-segment mb-5 flex gap-1 overflow-x-auto rounded-2xl bg-muted/70 p-1" role="tablist" aria-label="Secciones">
+      <div className="mx-auto max-w-4xl px-4 py-4 sm:px-6 sm:py-6">
+        <nav className="ez-segment mb-4 flex w-fit max-w-full gap-1 overflow-x-auto rounded-[27px] border border-border bg-muted/70 p-1 sm:mb-5" role="tablist" aria-label="Secciones">
           {TABS.map((t) => {
             const Icon = t.icon;
             const active = tab === t.id;
@@ -59,8 +59,8 @@ export default function App() {
                 role="tab"
                 aria-selected={active}
                 onClick={() => setTab(t.id)}
-                className={`flex items-center gap-1.5 whitespace-nowrap rounded-xl px-3.5 py-2 text-[13px] font-medium transition-all ${
-                  active ? "bg-card text-(--ez-ink) shadow" : "text-(--ez-muted) hover:text-(--ez-ink)"
+                className={`flex items-center gap-1.5 whitespace-nowrap rounded-full border px-3 py-1.5 text-xs font-medium transition-all sm:px-3.5 sm:py-2 sm:text-[13px] ${
+                  active ? "border-border bg-card text-foreground shadow-sm" : "border-transparent text-muted-foreground hover:text-foreground"
                 }`}
               >
                 <Icon size={15} />
@@ -77,7 +77,7 @@ export default function App() {
           {tab === "sync" && <Sincronizacion s={s} set={set} />}
           {tab === "respaldo" && <Respaldo s={s} set={set} />}
         </main>
-        <p className="mt-6 text-center text-[13px] text-(--ez-muted)">
+        <p className="mt-4 text-center text-xs text-muted-foreground sm:mt-6 sm:text-[13px]">
           Atajos de la extensión: Ctrl+Shift+Y selector · U/I/O favoritos. La extensión nunca envía sola.
         </p>
       </div>

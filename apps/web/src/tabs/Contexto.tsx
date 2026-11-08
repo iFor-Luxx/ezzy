@@ -25,26 +25,36 @@ export default function Contexto(props: { s: WebState; set: React.Dispatch<React
   }
 
   return (
-    <div className="grid gap-4 lg:grid-cols-2">
-      <Card title="Contexto para IA" icon={<ScanEye size={18} />} sub="Se anonimiza en tu navegador. Nada sale sin tu confirmación en Asistente.">
-        <div className="grid gap-3">
-          <Field label="Fragmento" htmlFor="cx-raw"><Textarea id="cx-raw" value={raw} onChange={(e) => setRaw(e.target.value)} /></Field>
-          <div className="flex gap-2">
-            <Button onClick={redact}>1) Anonimizar local</Button>
-            <Button variant="secondary" onClick={() => { setRaw(""); setPrev(""); toast.add({ description: "Temporales limpiados." }); }}>Cancelar y limpiar</Button>
+    <Card label="Contexto">
+      <div className="grid gap-3 lg:grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)]">
+        <div>
+          <div className="mb-1 flex items-center gap-2">
+            <span className="text-primary"><ScanEye size={18} /></span>
+            <h2 className="text-base font-semibold tracking-tight sm:text-[17px]">Contexto para IA</h2>
+          </div>
+          <p className="mb-3 text-[13px] text-muted-foreground">Se anonimiza en tu navegador. Nada sale sin tu confirmación en Asistente.</p>
+          <div className="grid gap-3">
+            <Field label="Fragmento" htmlFor="cx-raw"><Textarea id="cx-raw" value={raw} onChange={(e) => setRaw(e.target.value)} /></Field>
+            <div className="flex gap-2">
+              <Button onClick={redact}>1) Anonimizar local</Button>
+              <Button variant="secondary" onClick={() => { setRaw(""); setPrev(""); toast.add({ description: "Temporales limpiados." }); }}>Cancelar y limpiar</Button>
+            </div>
           </div>
         </div>
-      </Card>
-      <Card title="Vista previa anonimizada" sub="Edítala antes de usarla como contexto.">
-        {prev ? <p className="ez-pre">{prev}</p> : <Empty>Sin vista previa.</Empty>}
-        <Field label="Imagen" htmlFor="cx-img">
-          <div className="flex items-center gap-2 rounded-xl border border-dashed border-border p-3 text-[13px] text-(--ez-muted)">
-            <ImageOff size={15} /> Bloqueada en esta versión
-          </div>
-          <Input id="cx-img" type="file" accept="image/*" className="hidden" aria-label="Imagen bloqueada"
-            onChange={(e) => { e.target.value = ""; toast.add({ title: "Error", description: "Imagen no soportada: pega el texto manualmente." }); }} />
-        </Field>
-      </Card>
-    </div>
+        <div aria-hidden="true" className="bg-border max-lg:-mx-4 max-lg:h-px max-lg:w-auto lg:-my-4 lg:w-px lg:self-stretch" />
+        <div>
+          <h2 className="text-base font-semibold tracking-tight sm:text-[17px]">Vista previa anonimizada</h2>
+          <p className="mb-3 text-[13px] text-muted-foreground">Edítala antes de usarla como contexto.</p>
+          {prev ? <p className="ez-pre">{prev}</p> : <Empty>Sin vista previa.</Empty>}
+          <Field label="Imagen" htmlFor="cx-img">
+            <div className="flex items-center gap-2 rounded-xl border border-dashed border-border p-3 text-[13px] text-muted-foreground">
+              <ImageOff size={15} /> Bloqueada en esta versión
+            </div>
+            <Input id="cx-img" type="file" accept="image/*" className="hidden" aria-label="Imagen bloqueada"
+              onChange={(e) => { e.target.value = ""; toast.add({ title: "Error", description: "Imagen no soportada: pega el texto manualmente." }); }} />
+          </Field>
+        </div>
+      </div>
+    </Card>
   );
 }

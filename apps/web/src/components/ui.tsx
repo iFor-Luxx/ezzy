@@ -11,17 +11,17 @@ const buttonVariants = cva(
   {
     variants: {
       variant: {
-        default: "bg-(--ez-accent) text-white active:brightness-95",
-        secondary: "bg-secondary text-(--ez-ink) hover:bg-muted",
+        default: "bg-primary text-primary-foreground active:brightness-95",
+        secondary: "bg-secondary text-secondary-foreground hover:bg-muted",
         outline: "border border-border bg-card hover:bg-muted",
         ghost: "hover:bg-muted",
         destructive: "bg-destructive text-white active:brightness-95",
       },
       size: {
-        default: "h-9 px-4",
+        default: "h-8 px-3.5 text-[13px] sm:h-9 sm:px-4 sm:text-sm",
         sm: "h-8 px-3 text-[13px]",
-        lg: "h-11 px-6",
-        icon: "h-9 w-9",
+        lg: "h-9 px-4 text-sm sm:h-10 sm:px-5",
+        icon: "h-8 w-8 sm:h-9 sm:w-9",
       },
     },
     defaultVariants: { variant: "default", size: "default" },
@@ -35,17 +35,17 @@ export function Button(props: React.ButtonHTMLAttributes<HTMLButtonElement> & Va
 
 export function Card(props: { title?: string; sub?: string; icon?: React.ReactNode; action?: React.ReactNode; children: React.ReactNode; label?: string }) {
   return (
-    <section aria-label={props.label ?? props.title ?? "tarjeta"} className="ez-card p-5">
+    <section aria-label={props.label ?? props.title ?? "tarjeta"} className="ez-card p-4">
       {(props.title || props.action) && (
         <div className="mb-1 flex items-start justify-between gap-3">
           <div className="flex items-center gap-2">
-            {props.icon ? <span className="text-(--ez-accent)">{props.icon}</span> : null}
-            {props.title ? <h2 className="text-[17px] font-semibold tracking-tight">{props.title}</h2> : null}
+            {props.icon ? <span className="text-primary">{props.icon}</span> : null}
+            {props.title ? <h2 className="text-base font-semibold tracking-tight sm:text-[17px]">{props.title}</h2> : null}
           </div>
           {props.action}
         </div>
       )}
-      {props.sub ? <p className="mb-3 text-[13px] text-(--ez-muted)">{props.sub}</p> : null}
+      {props.sub ? <p className="mb-3 text-[13px] text-muted-foreground">{props.sub}</p> : null}
       {props.children}
     </section>
   );
@@ -56,7 +56,7 @@ export function Field(props: { label: string; htmlFor: string; hint?: string; ch
     <div className="grid gap-1.5">
       <label htmlFor={props.htmlFor} className="text-[13px] font-medium">{props.label}</label>
       {props.children}
-      {props.hint ? <p className="text-xs text-(--ez-muted)">{props.hint}</p> : null}
+      {props.hint ? <p className="text-xs text-muted-foreground">{props.hint}</p> : null}
     </div>
   );
 }
@@ -67,7 +67,7 @@ export function Input(props: React.InputHTMLAttributes<HTMLInputElement>) {
       autoComplete="off"
       {...props}
       className={cn(
-        "flex h-10 w-full rounded-xl border border-transparent bg-(--ez-bg) px-3 text-sm placeholder:text-muted-foreground focus:border-(--ez-accent) focus:bg-card",
+        "flex h-8 w-full rounded-xl border border-transparent bg-muted px-3 text-[13px] placeholder:text-muted-foreground focus:border-ring focus:bg-card sm:h-9 sm:text-sm",
         props.className
       )}
     />
@@ -80,7 +80,7 @@ export function Textarea(props: React.TextareaHTMLAttributes<HTMLTextAreaElement
       autoComplete="off"
       {...props}
       className={cn(
-        "flex min-h-[88px] w-full rounded-xl border border-transparent bg-(--ez-bg) px-3 py-2 text-sm placeholder:text-muted-foreground focus:border-(--ez-accent) focus:bg-card",
+        "flex min-h-[72px] w-full rounded-xl border border-transparent bg-muted px-3 py-2 text-[13px] placeholder:text-muted-foreground focus:border-ring focus:bg-card sm:text-sm",
         props.className
       )}
     />
@@ -95,7 +95,7 @@ export function SelectTrigger(props: React.ComponentPropsWithoutRef<typeof Selec
     <SelectPrimitive.Trigger
       {...props}
       className={cn(
-        "flex h-10 w-full items-center justify-between rounded-xl border border-transparent bg-(--ez-bg) px-3 text-sm focus:border-(--ez-accent) focus:bg-card [&>span]:truncate",
+        "flex h-8 w-full items-center justify-between rounded-xl border border-transparent bg-muted px-3 text-[13px] focus:border-ring focus:bg-card sm:h-9 sm:text-sm [&>span]:truncate",
         props.className
       )}
     >
@@ -149,11 +149,11 @@ const badgeVariants = cva(
   {
     variants: {
       tone: {
-        default: "border-border bg-muted text-(--ez-ink)",
-        ok: "border-(--ez-ok)/30 bg-(--ez-ok)/10 text-(--ez-ok)",
-        warn: "border-(--ez-warn)/30 bg-(--ez-warn)/10 text-(--ez-warn)",
+        default: "border-border bg-muted text-foreground",
+        ok: "border-chart-2/30 bg-chart-2/10 text-chart-2",
+        warn: "border-chart-4/30 bg-chart-4/10 text-chart-4",
         bad: "border-destructive/30 bg-destructive/10 text-destructive",
-        info: "border-(--ez-accent)/30 bg-(--ez-accent)/10 text-(--ez-accent)",
+        info: "border-primary/30 bg-primary/10 text-primary",
       },
     },
     defaultVariants: { tone: "default" },
@@ -165,14 +165,14 @@ export function Badge(props: { tone?: "default" | "ok" | "warn" | "bad" | "info"
 }
 
 export function Empty(props: { children: React.ReactNode }) {
-  return <p className="py-4 text-center text-[13px] text-(--ez-muted)">{props.children}</p>;
+  return <p className="py-4 text-center text-[13px] text-muted-foreground">{props.children}</p>;
 }
 
 export function Stat(props: { label: string; value: string }) {
   return (
     <div className="ez-card px-4 py-3">
-      <p className="text-xs text-(--ez-muted)">{props.label}</p>
-      <p className="text-xl font-semibold tracking-tight">{props.value}</p>
+      <p className="text-xs text-muted-foreground">{props.label}</p>
+      <p className="text-lg font-semibold tracking-tight sm:text-xl">{props.value}</p>
     </div>
   );
 }
@@ -187,8 +187,8 @@ export function Dialog(props: { title: string; children: React.ReactNode; onClos
     >
       <DialogPrimitive.Portal>
         <DialogPrimitive.Overlay className="fixed inset-0 z-30 bg-black/30 backdrop-blur-sm" />
-        <DialogPrimitive.Content className="fixed left-1/2 top-1/2 z-30 max-h-[85vh] w-full max-w-xl -translate-x-1/2 -translate-y-1/2 overflow-auto rounded-2xl border border-black/[0.06] bg-card p-6 shadow-[0_8px_30px] shadow-black/10">
-          <DialogPrimitive.Title className="mb-3 text-lg font-semibold tracking-tight">{props.title}</DialogPrimitive.Title>
+        <DialogPrimitive.Content className="fixed left-1/2 top-1/2 z-30 max-h-[85vh] w-[calc(100%-2rem)] max-w-xl -translate-x-1/2 -translate-y-1/2 overflow-auto rounded-2xl border border-black/[0.06] bg-card p-4 shadow-[0_8px_30px] shadow-black/10 sm:p-6">
+          <DialogPrimitive.Title className="mb-3 text-base font-semibold tracking-tight sm:text-lg">{props.title}</DialogPrimitive.Title>
           {props.children}
         </DialogPrimitive.Content>
       </DialogPrimitive.Portal>

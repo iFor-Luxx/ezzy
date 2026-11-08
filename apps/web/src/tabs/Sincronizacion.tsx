@@ -9,11 +9,11 @@ import { toast } from "../components/ui/toast";
 function Bar(props: { label: string; used: number; cap: number; unit: string }) {
   const p = pct(props.used, props.cap);
   const tone = barTone(p);
-  const color = tone === "ok" ? "bg-(--ez-ok)" : tone === "warn" ? "bg-(--ez-warn)" : "bg-destructive";
+  const color = tone === "ok" ? "bg-chart-2" : tone === "warn" ? "bg-chart-4" : "bg-destructive";
   return (
     <div className="grid gap-1">
       <div className="flex items-baseline justify-between text-[13px]">
-        <span className="text-(--ez-muted)">{props.label}</span>
+        <span className="text-muted-foreground">{props.label}</span>
         <span className="mono text-xs">{props.used.toLocaleString("es-PE")} / {props.cap.toLocaleString("es-PE")} {props.unit} · {p.toFixed(1)}%</span>
       </div>
       <div className="h-2 overflow-hidden rounded-full bg-muted">
@@ -107,11 +107,17 @@ export default function Sincronizacion(props: { s: WebState; set: React.Dispatch
   }
 
   return (
-    <div className="grid gap-4 lg:grid-cols-2">
-      <Card title="Estado de la nube" icon={<CloudSun size={18} />}
-        sub="Tu Worker, sin entrar a Cloudflare."
-        action={cloud ? <Badge tone={cloud.blocked ? "bad" : "ok"}>{cloud.blocked ? `bloqueado ${cloud.code ?? ""}` : "en línea"}</Badge> : <Badge>sin conectar</Badge>}>
-        <div className="grid gap-3">
+    <>
+      <Card label="Sincronización">
+        <div className="grid items-start gap-3 lg:grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)]">
+          <div>
+            <div className="mb-1 flex items-center gap-2">
+              <span className="text-primary"><CloudSun size={18} /></span>
+              <h2 className="text-base font-semibold tracking-tight sm:text-[17px]">Estado de la nube</h2>
+              <span className="ml-auto">{cloud ? <Badge tone={cloud.blocked ? "bad" : "ok"}>{cloud.blocked ? `bloqueado ${cloud.code ?? ""}` : "en línea"}</Badge> : <Badge>sin conectar</Badge>}</span>
+            </div>
+            <p className="mb-3 text-[13px] text-muted-foreground">Tu Worker, sin entrar a Cloudflare.</p>
+            <div className="grid gap-3">
           <Field label="URL del Worker" htmlFor="wk-url">
             <div className="flex gap-2">
               <Input id="wk-url" value={workerUrl} onChange={(e) => setWorkerUrl(e.target.value)} inputMode="url" aria-label="URL del Worker" />
@@ -122,7 +128,7 @@ export default function Sincronizacion(props: { s: WebState; set: React.Dispatch
           </Field>
           {cloud ? (
             <>
-              <p className="text-[13px] text-(--ez-muted)">
+              <p className="text-[13px] text-muted-foreground">
                 Plan {cloud.plan}{cloud.planVerifiedAt ? ` · verificado ${cloud.planVerifiedAt.slice(0, 10)}` : " · sin verificar"} ·{" "}
                 {cloud.entities} entidades · {cloud.installations} instalaciones ·{" "}
                 <span className="mono text-xs">{cloud.ts.slice(0, 19).replace("T", " ")}</span>
@@ -133,21 +139,28 @@ export default function Sincronizacion(props: { s: WebState; set: React.Dispatch
             </>
           ) : null}
         </div>
-      </Card>
-      <Card title="Puente con la extensión" icon={<ArrowLeftRight size={18} />}>
-        <div className="flex flex-wrap gap-2">
-          <Button onClick={download}><Download size={15} /> Exportar puente JSON</Button>
-          <label className="inline-flex h-9 cursor-pointer items-center gap-2 rounded-full bg-muted px-4 text-sm font-medium hover:bg-muted" htmlFor="br-file">
-            <Upload size={15} /> Importar puente
-          </label>
-          <input id="br-file" type="file" accept="application/json" className="hidden" onChange={upload} />
+          </div>
+          <div aria-hidden="true" className="bg-border max-lg:-mx-4 max-lg:h-px max-lg:w-auto lg:-my-4 lg:w-px lg:self-stretch" />
+          <div>
+            <div className="mb-1 flex items-center gap-2">
+              <span className="text-primary"><ArrowLeftRight size={18} /></span>
+              <h2 className="text-base font-semibold tracking-tight sm:text-[17px]">Puente con la extensión</h2>
+            </div>
+            <div className="mt-3 flex flex-wrap gap-2">
+              <Button onClick={download}><Download size={15} /> Exportar puente JSON</Button>
+              <label className="inline-flex h-8 cursor-pointer items-center gap-2 rounded-full bg-muted px-3.5 text-[13px] font-medium hover:bg-muted sm:h-9 sm:px-4 sm:text-sm" htmlFor="br-file">
+                <Upload size={15} /> Importar puente
+              </label>
+              <input id="br-file" type="file" accept="application/json" className="hidden" onChange={upload} />
+            </div>
+          </div>
         </div>
       </Card>
       {cloud && !cloud.blocked ? (
-        <div className="lg:col-span-2">
+        <div className="mt-3">
           <ExplorerNube workerUrl={workerUrl} />
         </div>
       ) : null}
-    </div>
+    </>
   );
 }

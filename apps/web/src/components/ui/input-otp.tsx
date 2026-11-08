@@ -3,11 +3,12 @@
 import * as React from "react"
 import { cn } from "cn"
 import { OTPInput, OTPInputContext } from "input-otp"
-import { MinusIcon } from "lucide-react"
+import { Asterisk, MinusIcon } from "lucide-react"
 
 function InputOTP({
   className,
   containerClassName,
+  pushPasswordManagerStrategy = "none",
   ...props
 }: React.ComponentProps<typeof OTPInput> & {
   containerClassName?: string
@@ -15,8 +16,9 @@ function InputOTP({
   return (
     <OTPInput
       data-slot="input-otp"
+      pushPasswordManagerStrategy={pushPasswordManagerStrategy}
       containerClassName={cn(
-        "flex items-center gap-2 has-disabled:opacity-50",
+        "flex w-fit items-center gap-2 has-disabled:opacity-50",
         containerClassName
       )}
       className={cn("disabled:cursor-not-allowed", className)}
@@ -55,7 +57,7 @@ function InputOTPSlot({
       )}
       {...props}
     >
-      {char}
+      {char ? <Asterisk aria-hidden="true" size={16} strokeWidth={3} className="shrink-0" /> : null}
       {hasFakeCaret && (
         <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
           <div className="h-4 w-px animate-caret-blink bg-foreground duration-1000" />

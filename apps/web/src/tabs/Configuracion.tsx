@@ -25,7 +25,7 @@ export default function Configuracion(props: { s: WebState; set: React.Dispatch<
                 active ? "bg-black/[0.07]" : "hover:bg-black/[0.04]"
               }`}
             >
-              <span className="flex h-7 w-7 shrink-0 items-center justify-center text-(--ez-muted)">
+              <span className="flex h-7 w-7 shrink-0 items-center justify-center text-muted-foreground">
                 <Icon size={17} />
               </span>
               {it.label}
@@ -33,8 +33,8 @@ export default function Configuracion(props: { s: WebState; set: React.Dispatch<
           );
         })}
       </aside>
-      <div className="min-w-0 border-t border-border p-5 md:border-l md:border-t-0">
-        <h1 className="mb-4 text-[19px] font-bold tracking-tight">{current.label}</h1>
+      <div className="min-w-0 border-t border-border p-4 md:border-l md:border-t-0">
+        <h1 className="mb-4 text-lg font-bold tracking-tight sm:text-[19px]">{current.label}</h1>
         {section === "asistente" && <Asistente s={props.s} set={props.set} />}
       </div>
     </div>

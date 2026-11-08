@@ -45,16 +45,28 @@ export default function Respaldo(props: { s: WebState; set: React.Dispatch<React
   }
 
   return (
-    <div className="grid gap-4 lg:grid-cols-2">
-      <Card title="Respaldo local" icon={<DatabaseBackup size={18} />} sub="Sin nube. Las imágenes quedan fuera (solo referencias locales en tus equipos).">
-        <div className="flex flex-wrap gap-2">
-          <Button onClick={full}>Exportar todo</Button>
-          <Button variant="secondary" onClick={() => { set(seedExample()); toast.add({ description: "Ejemplo sintético cargado." }); }}><FlaskConical size={15} /> Cargar ejemplo</Button>
-          <Button variant="destructive" onClick={() => { if (confirm("¿Borrar todo el panel? Haz un respaldo antes.")) { localStorage.removeItem("ezzy.web.v1"); location.reload(); } }}><Trash2 size={15} /> Borrar panel</Button>
+    <Card label="Respaldo">
+      <div className="grid items-start gap-3 lg:grid-cols-[minmax(0,2fr)_auto_minmax(0,3fr)]">
+        <div>
+          <div className="mb-1 flex items-center gap-2">
+            <span className="text-primary"><DatabaseBackup size={18} /></span>
+            <h2 className="text-base font-semibold tracking-tight sm:text-[17px]">Respaldo local</h2>
+          </div>
+          <p className="mb-3 text-[13px] text-muted-foreground">Sin nube. Las imágenes quedan fuera (solo referencias locales en tus equipos).</p>
+          <div className="flex flex-wrap gap-2">
+            <Button onClick={full}>Exportar todo</Button>
+            <Button variant="secondary" onClick={() => { set(seedExample()); toast.add({ description: "Ejemplo sintético cargado." }); }}><FlaskConical size={15} /> Cargar ejemplo</Button>
+            <Button variant="destructive" onClick={() => { if (confirm("¿Borrar todo el panel? Haz un respaldo antes.")) { localStorage.removeItem("ezzy.web.v1"); location.reload(); } }}><Trash2 size={15} /> Borrar panel</Button>
+          </div>
         </div>
-      </Card>
-      <Card title={`Auditoría (${s.audits.length})`} icon={<ShieldCheck size={18} />} sub="Solo qué pasó y cuándo. Nada de texto sensible."
-        action={<Badge>local</Badge>}>
+        <div aria-hidden="true" className="bg-border max-lg:-mx-4 max-lg:h-px max-lg:w-auto lg:-my-4 lg:w-px lg:self-stretch" />
+        <div>
+          <div className="mb-1 flex items-center gap-2">
+            <span className="text-primary"><ShieldCheck size={18} /></span>
+            <h2 className="text-base font-semibold tracking-tight sm:text-[17px]">Auditoría ({s.audits.length})</h2>
+            <span className="ml-auto"><Badge>local</Badge></span>
+          </div>
+          <p className="mb-3 text-[13px] text-muted-foreground">Solo qué pasó y cuándo. Nada de texto sensible.</p>
         {s.audits.length === 0 ? <Empty>Sin eventos.</Empty> : (
           <div>
             {(() => {
@@ -66,20 +78,20 @@ export default function Respaldo(props: { s: WebState; set: React.Dispatch<React
               }
               return [...groups.entries()].map(([day, rows]) => (
                 <div key={day} className="mb-3 last:mb-0">
-                  <p className="mb-1 text-xs font-medium text-(--ez-muted)">{day}</p>
+                  <p className="mb-1 text-xs font-medium text-muted-foreground">{day}</p>
                   <div className="overflow-hidden rounded-xl border border-border">
                     {rows.map((a) => {
                       const meta = actionMeta(a.action);
                       const Icon = meta.Icon;
                       return (
                         <div key={a.id} className="flex items-center gap-3 border-t border-border px-3 py-2 first:border-t-0">
-                          <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-muted text-(--ez-muted)">
+                          <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-muted text-muted-foreground">
                             <Icon size={14} />
                           </span>
                           <div className="min-w-0 flex-1">
-                            <p className="truncate text-[13px] font-medium">{meta.label} · <span className="font-normal text-(--ez-muted)">{a.detail}</span></p>
+                            <p className="truncate text-[13px] font-medium">{meta.label} · <span className="font-normal text-muted-foreground">{a.detail}</span></p>
                           </div>
-                          <span className="mono shrink-0 text-xs text-(--ez-muted)">{fmtTime(a.ts)}</span>
+                          <span className="mono shrink-0 text-xs text-muted-foreground">{fmtTime(a.ts)}</span>
                         </div>
                       );
                     })}
@@ -89,8 +101,9 @@ export default function Respaldo(props: { s: WebState; set: React.Dispatch<React
             })()}
           </div>
         )}
-        <p className="mt-2 text-[13px] text-(--ez-muted)">Incidente: olvida la key, pausa el sync, desconecta el equipo, limpia temporales, exporta este registro redactado.</p>
-      </Card>
-    </div>
+        <p className="mt-2 text-[13px] text-muted-foreground">Incidente: olvida la key, pausa el sync, desconecta el equipo, limpia temporales, exporta este registro redactado.</p>
+        </div>
+      </div>
+    </Card>
   );
 }

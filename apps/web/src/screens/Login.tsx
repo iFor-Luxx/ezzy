@@ -6,19 +6,19 @@ import { toast } from "../components/ui/toast";
 import SkyGradient from "../components/SkyGradient";
 import { enrollPin, getInstallationId, getWorkerUrl } from "../lib/auth";
 
-// Pantalla 1 · Acceso único: PIN de 4–6 dígitos. La URL viene de VITE_WORKER_URL
-// o del primer ingreso manual (queda en localStorage). Nada fijo en el repo.
+// Pantalla 1 · Acceso único: PIN de 4–6 dígitos. Servidor único (VITE_WORKER_URL).
 export default function Login(props: { onAuthed: () => void }) {
   const [pin, setPin] = React.useState("");
-  const [workerUrl, setWorkerUrl] = React.useState(getWorkerUrl);
   const [busy, setBusy] = React.useState(false);
-  const needUrl = !workerUrl.trim().startsWith("https://");
+  const busyRef = React.useRef(false);
 
   async function entrar(e: React.FormEvent): Promise<void> {
     e.preventDefault();
-    const base = workerUrl.trim().replace(/\/+$/, "");
+    // Una sola llamada al servidor: si ya hay un intento en curso, ignorar.
+    if (busyRef.current) return;
+    const base = getWorkerUrl().trim().replace(/\/+$/, "");
     if (!base.startsWith("https://")) {
-      toast.add({ title: "Error", description: "Pega una vez la URL https de tu Worker, quedará guardada en este navegador." });
+      toast.add({ title: "Error", description: "Servidor no configurado." });
       return;
     }
     if (!/^\d{4,6}$/.test(pin)) {
@@ -26,19 +26,22 @@ export default function Login(props: { onAuthed: () => void }) {
       return;
     }
     setBusy(true);
+    busyRef.current = true;
     try {
+      // Único fetch al servidor en todo el flujo de login.
       await enrollPin(base, getInstallationId(), pin);
       setPin("");
       props.onAuthed();
     } catch (ex) {
       toast.add({ title: "Error", description: ex instanceof Error ? ex.message : "no se pudo entrar" });
     } finally {
+      busyRef.current = false;
       setBusy(false);
     }
   }
 
   return (
-    <div className="relative flex min-h-dvh items-center justify-center overflow-hidden px-5">
+    <div className="relative flex min-h-dvh items-center justify-center overflow-hidden px-4">
       <SkyGradient style={{ position: "absolute", inset: 0, height: "100%", aspectRatio: "auto" }} />
       <Card className="relative w-full max-w-[380px] rounded-[28px] border-card/60 bg-card/60 shadow-[0_8px_30px] shadow-black/10 backdrop-blur-2xl">
         <CardHeader className="items-center text-center">
@@ -47,29 +50,26 @@ export default function Login(props: { onAuthed: () => void }) {
         </CardHeader>
         <CardContent>
           <form onSubmit={(e) => void entrar(e)} className="grid gap-4">
-            {needUrl ? (
-              <label className="grid gap-1 text-left text-[13px] text-[#6e6e73]">
-                URL del Worker (solo primera vez)
-                <input
-                  value={workerUrl}
-                  onChange={(e) => setWorkerUrl(e.target.value)}
-                  inputMode="url"
-                  placeholder="https://tu-worker.workers.dev"
-                  aria-label="URL del Worker"
-                  className="h-10 rounded-xl border border-black/10 bg-white/80 px-3 text-sm text-black outline-none"
-                />
-              </label>
-            ) : null}
             <div className="flex justify-center">
-              <InputOTP maxLength={6} value={pin} onChange={setPin} inputMode="numeric" aria-label="PIN">
+              <InputOTP
+                maxLength={6}
+                value={pin}
+                onChange={setPin}
+                inputMode="numeric"
+                type="password"
+                autoComplete="current-password"
+                // Sin onComplete: no llamar al servidor al escribir, solo al pulsar Entrar.
+                disabled={busy}
+                aria-label="PIN"
+              >
                 <InputOTPGroup className="gap-2">
                   {[0, 1, 2, 3, 4, 5].map((i) => (
-                    <InputOTPSlot key={i} index={i} className="h-11 w-11 rounded-full border border-card/80 bg-card/50 text-base first:rounded-full last:rounded-full data-[active=true]:border-(--ez-accent) data-[active=true]:bg-card data-[active=true]:ring-0" />
+                    <InputOTPSlot key={i} index={i} className="h-11 w-11 rounded-full border border-card/80 bg-card/50 text-base first:rounded-full last:rounded-full data-[active=true]:border-ring data-[active=true]:bg-card data-[active=true]:ring-0" />
                   ))}
                 </InputOTPGroup>
               </InputOTP>
             </div>
-            <Button type="submit" size="lg" className="w-full rounded-full bg-(--ez-accent) hover:bg-(--ez-accent)/90" disabled={busy}>
+            <Button type="submit" size="lg" className="w-full rounded-full bg-primary hover:bg-primary/90" disabled={busy}>
               {busy ? "Verificando…" : "Entrar"}
             </Button>
           </form>

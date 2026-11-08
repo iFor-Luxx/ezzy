@@ -41,18 +41,24 @@ export default function Mensajes(props: { s: WebState; set: React.Dispatch<React
   }
 
   return (
-    <div className="grid gap-4 lg:grid-cols-5">
-      <div className="lg:col-span-2">
-        <Card title="Nuevo mensaje aprobado" icon={<MessageSquarePlus size={18} />} sub="Usa {{variables}}. Se revisa antes de copiar; nunca se envía solo.">
+    <Card label="Mensajes">
+      <div className="grid gap-3 lg:grid-cols-[minmax(0,2fr)_auto_minmax(0,3fr)]">
+        <div>
+          <div className="mb-1 flex items-center gap-2">
+            <span className="text-primary"><MessageSquarePlus size={18} /></span>
+            <h2 className="text-base font-semibold tracking-tight sm:text-[17px]">Nuevo mensaje aprobado</h2>
+          </div>
+          <p className="mb-3 text-[13px] text-muted-foreground">Usa {"{{variables}}"}. Se revisa antes de copiar; nunca se envía solo.</p>
           <form onSubmit={add} className="grid gap-3">
             <Field label="Título" htmlFor="m-title"><Input id="m-title" value={title} onChange={(e) => setTitle(e.target.value)} /></Field>
             <Field label="Cuerpo" htmlFor="m-body"><Textarea id="m-body" value={body} onChange={(e) => setBody(e.target.value)} /></Field>
             <div><Button type="submit">Aprobar mensaje</Button></div>
           </form>
-        </Card>
-      </div>
-      <div className="lg:col-span-3">
-        <Card title={`Mensajes (${rows.length})`} sub="Atajos de la extensión: favorito 1-3. El resto va por selector.">
+        </div>
+        <div aria-hidden="true" className="bg-border max-lg:-mx-4 max-lg:h-px max-lg:w-auto lg:-my-4 lg:w-px lg:self-stretch" />
+        <div>
+          <h2 className="text-base font-semibold tracking-tight sm:text-[17px]">Mensajes ({rows.length})</h2>
+          <p className="mb-3 text-[13px] text-muted-foreground">Atajos de la extensión: favorito 1-3. El resto va por selector.</p>
           <Field label="Buscar" htmlFor="m-q">
             <div className="relative">
               <Search size={15} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
@@ -60,11 +66,11 @@ export default function Mensajes(props: { s: WebState; set: React.Dispatch<React
             </div>
           </Field>
           {rows.length === 0 ? <Empty>Sin mensajes.</Empty> : (
-            <div className="mt-2 grid gap-3">
+            <div className="mt-2 grid gap-2">
               {rows.map((m) => (
-                <div key={m.id} className="rounded-2xl border border-border p-4">
+                <div key={m.id} className="rounded-2xl border border-border p-3">
                   <div className="flex flex-wrap items-center gap-2">
-                    <strong className="tracking-tight">{m.title}</strong>
+                    <strong className="text-sm tracking-tight">{m.title}</strong>
                     <Badge tone={m.status === "approved" ? "ok" : "warn"}>{m.status}</Badge>
                     {m.command_alias ? <Badge tone="info"><Star size={11} />{m.command_alias}</Badge> : null}
                   </div>
@@ -78,8 +84,8 @@ export default function Mensajes(props: { s: WebState; set: React.Dispatch<React
               ))}
             </div>
           )}
-        </Card>
+        </div>
       </div>
-    </div>
+    </Card>
   );
 }
