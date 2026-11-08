@@ -5,7 +5,7 @@ export function inferenceBase(): string {
 
 export function storedKey(): string {
   try {
-    return sessionStorage.getItem("ezzy.oc.key") ?? "";
+    return sessionStorage.getItem("ezzy.oc.key") || localStorage.getItem("ezzy.oc.key.saved") || "";
   } catch {
     return "";
   }

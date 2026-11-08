@@ -25,7 +25,7 @@ describe("sync-api Fase 5 (piloto sintético)", () => {
       changes: [{ idempotencyKey: "k1", entity_type: "product", entity_id: "p1", operation: "upsert", revision: 1, base_revision: 0, payload: { id: "p1", name: "Polo" } }],
     });
     expect(retry.applied).toEqual(["k1"]);
-    expect(s.pull().changes.find((c) => c.entity_id === "p1")?.deleted).toBe(false);
+    expect((await s.pull()).changes.find((c) => c.entity_id === "p1")?.deleted).toBe(false);
   });
   test("rechaza imagen/secreto/ruta (criterio 9)", async () => {
     const s = await setup();
@@ -42,7 +42,7 @@ describe("sync-api Fase 5 (piloto sintético)", () => {
     expect(c.conflicts).toHaveLength(1);
     const t = await s.push({ installationId: "inst-1", schemaVersion: 1, changes: [{ idempotencyKey: "d", entity_type: "price", entity_id: "pr1", operation: "tombstone", revision: 4, base_revision: 2, payload: {} }] });
     expect(t.applied).toEqual(["d"]);
-    expect(s.pull().changes.find((x) => x.entity_id === "pr1")?.deleted).toBe(true);
+    expect((await s.pull()).changes.find((x) => x.entity_id === "pr1")?.deleted).toBe(true);
   });
   test("cuota desconocida o HARD bloquea (criterio 11) + revocación", async () => {
     const s = await setup();

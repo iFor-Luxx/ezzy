@@ -1,9 +1,9 @@
 // Adaptador HTTP del sync-api: expone el protocolo a la extensión y al panel.
 // Rutas: POST /v1/enroll · GET /v1/status · GET /v1/data · POST /v1/sync/push · GET /v1/sync/pull?cursor=
 // Auth por header x-ezzy-installation (instalación enrolada). /v1/status es público mínimo (sin contenido).
-// Auth persistente en D1 (una sola fuente de verdad aunque Cloudflare recicle isolates).
-// Datos sync aún en memoria por isolate (piloto): se pierden al reiniciar.
-import { SyncServer } from "./server";
+// Auth + datos persistentes en D1 (una sola fuente de verdad aunque Cloudflare recicle isolates).
+// Costo cero: sin polling, 1 query por data/pull, 2 counts por status, push en 1 batch.
+import { SyncServer, D1RecordStore } from "./server";
 import { AuthStore, D1AuthStore, type AuthPort, type D1Database } from "./auth";
 import { SCHEMA_VERSION } from "@ezzy/contracts";
 import { errorEnvelope } from "@ezzy/sync-client";
@@ -23,7 +23,7 @@ function getServer(env?: Env): SyncServer {
   if (!db) return memServer;
   let s = servers.get(db);
   if (!s) {
-    s = new SyncServer(new D1AuthStore(db));
+    s = new SyncServer(new D1AuthStore(db), new D1RecordStore(db));
     servers.set(db, s);
   }
   return s;
@@ -106,7 +106,7 @@ export default {
     }
 
     if (req.method === "GET" && path === "/v1/data") {
-      return json({ schemaVersion: SCHEMA_VERSION, data: server.list() });
+      return json({ schemaVersion: SCHEMA_VERSION, data: await server.list() });
     }
 
     if (req.method === "POST" && path === "/v1/sync/push") {
@@ -123,7 +123,7 @@ export default {
     }
 
     if (req.method === "GET" && path === "/v1/sync/pull") {
-      return json({ schemaVersion: SCHEMA_VERSION, ...server.pull(url.searchParams.get("cursor") ?? undefined) });
+      return json({ schemaVersion: SCHEMA_VERSION, ...(await server.pull(url.searchParams.get("cursor") ?? undefined)) });
     }
 
     return json(errorEnvelope("VALIDATION_ERROR", "ruta no encontrada", false), 404);

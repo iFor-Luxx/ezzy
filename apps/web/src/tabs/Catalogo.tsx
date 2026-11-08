@@ -2,6 +2,8 @@ import React from "react";
 import { PackagePlus, Pencil, Sparkles, Trash2 } from "lucide-react";
 import { Button, Card, Dialog, Field, Input, Badge, Empty, Select, SelectTrigger, SelectContent, SelectItem } from "../components/ui";
 import { newId, nowIso, solesToMinor, validateQty, tierLabel, parseTierLabel, prettyVariant, formatMoney, audit, type WebState } from "../lib/store";
+import { productChanges, pushChanges, deleteProductChanges } from "../lib/sync";
+import { buildUpsert, buildTombstone } from "../lib/cloud";
 import { pingApi } from "@ezzy/ai-opencode";
 import { inferenceBase, storedKey, storedModelId } from "../lib/ai";
 import { toast } from "../components/ui/toast";
@@ -22,13 +24,15 @@ export default function Catalogo(props: { s: WebState; set: React.Dispatch<React
   const [brand, setBrand] = React.useState("");
   const [tiers, setTiers] = React.useState<Tier[]>(defaultTiers());
   const [aiBusy, setAiBusy] = React.useState(false);
+  const [saving, setSaving] = React.useState(false);
 
   function setTier(i: number, patch: Partial<Tier>): void {
     setTiers((t) => t.map((row, j) => (j === i ? { ...row, ...patch } : row)));
   }
 
-  function save(e: React.FormEvent): void {
+  async function save(e: React.FormEvent): Promise<void> {
     e.preventDefault();
+    if (saving) return;
     try {
       if (!name.trim()) throw new Error("nombre requerido");
       const filled = tiers.filter((t) => t.soles.trim() !== "");
@@ -49,6 +53,9 @@ export default function Catalogo(props: { s: WebState; set: React.Dispatch<React
         id: newId(), product_id: pid, variant_id: variants[i].id,
         amount_minor: minor, currency, source: "panel", verified_at: now, revision: 1,
       }));
+      // Nube primero (1 sola petición en lote), local como espejo.
+      setSaving(true);
+      await pushChanges(productChanges(product, 0, variants, prices));
       set((p) => audit({
         ...p,
         products: [...p.products, product],
@@ -59,9 +66,11 @@ export default function Catalogo(props: { s: WebState; set: React.Dispatch<React
       setFabric("");
       setBrand("");
       setTiers(defaultTiers());
-      toast.add({ description: `"${product.name}" guardado con ${parsed.length} precio(s).` });
+      toast.add({ description: `"${product.name}" guardado en tu nube.` });
     } catch (ex) {
       toast.add({ title: "Error", description: ex instanceof Error ? ex.message : "error" });
+    } finally {
+      setSaving(false);
     }
   }
 
@@ -90,18 +99,26 @@ export default function Catalogo(props: { s: WebState; set: React.Dispatch<React
     }
   }
 
-  function removeProduct(pid: string): void {
+  async function removeProduct(pid: string): Promise<void> {
     const target = s.products.find((x) => x.id === pid);
-    set((p) => audit({
-      ...p,
-      products: p.products.filter((x) => x.id !== pid),
-      variants: p.variants.filter((v) => v.product_id !== pid),
-      prices: p.prices.filter((x) => x.product_id !== pid),
-    }, "producto.eliminar", target ? target.name : pid.slice(0, 8)));
-    if (editingId === pid) setEditingId(null);
-    setDeleteId(null);
-    setDeleteName("");
-    toast.add({ description: "Prenda eliminada." });
+    if (!target) return;
+    try {
+      const vRows = s.variants.filter((v) => v.product_id === pid);
+      const pRows = s.prices.filter((x) => x.product_id === pid);
+      await pushChanges(deleteProductChanges(pid, target.revision, vRows.map((v) => ({ id: v.id, revision: v.revision })), pRows.map((p) => ({ id: p.id, revision: p.revision }))));
+      set((p) => audit({
+        ...p,
+        products: p.products.filter((x) => x.id !== pid),
+        variants: p.variants.filter((v) => v.product_id !== pid),
+        prices: p.prices.filter((x) => x.product_id !== pid),
+      }, "producto.eliminar", target ? target.name : pid.slice(0, 8)));
+      if (editingId === pid) setEditingId(null);
+      setDeleteId(null);
+      setDeleteName("");
+      toast.add({ description: "Prenda eliminada de tu nube." });
+    } catch (ex) {
+      toast.add({ title: "Error", description: ex instanceof Error ? ex.message : "no se pudo eliminar" });
+    }
   }
 
   // --- Edición de prenda existente ---
@@ -140,8 +157,11 @@ export default function Catalogo(props: { s: WebState; set: React.Dispatch<React
     setEditingId(pid);
   }
 
-  function saveEdit(pid: string): void {
+  async function saveEdit(pid: string): Promise<void> {
+    if (saving) return;
     try {
+      const target = s.products.find((x) => x.id === pid);
+      if (!target) throw new Error("prenda no encontrada");
       if (!eName.trim()) throw new Error("nombre requerido");
       const live = eRows.filter((r) => !r.del);
       if (live.length === 0) throw new Error("deja al menos un precio");
@@ -153,10 +173,48 @@ export default function Catalogo(props: { s: WebState; set: React.Dispatch<React
         return { ...r, qty, minor: solesToMinor(r.soles) };
       });
       const now = nowIso();
+      // Cambios nube en un lote: producto + precios/variantes tocados + tombstones.
+      const changes: ReturnType<typeof buildUpsert>[] = [];
+      changes.push(buildUpsert("product", pid, target.revision, {
+        id: pid, name: eName.trim(), fabric: eFabric.trim() || undefined, brand: eBrand.trim() || undefined,
+        description: target.description, status: target.status, created_at: target.created_at, updated_at: now, revision: target.revision + 1,
+      }));
+      for (const r of eRows.filter((x) => x.del)) {
+        const v = r.variantId ? s.variants.find((x) => x.id === r.variantId) : undefined;
+        const pr = r.priceId ? s.prices.find((x) => x.id === r.priceId) : s.prices.find((x) => x.variant_id === r.variantId);
+        if (v) changes.push(buildTombstone("variant", v.id, v.revision));
+        if (pr) changes.push(buildTombstone("price", pr.id, pr.revision));
+      }
+      const newVariants: { id: string; product_id: string; label: string; active: boolean; revision: number }[] = [];
+      const newPrices: { id: string; product_id: string; variant_id: string; amount_minor: number; currency: string; source: string; verified_at: string; revision: number }[] = [];
+      const updatedPrices: { id: string; minor: number; base: number }[] = [];
+      for (const r of parsed) {
+        if (r.priceId) {
+          const cur = s.prices.find((x) => x.id === r.priceId);
+          if (cur && cur.amount_minor !== r.minor) {
+            changes.push(buildUpsert("price", cur.id, cur.revision, {
+              id: cur.id, product_id: pid, variant_id: cur.variant_id, amount_minor: r.minor,
+              currency: cur.currency, source: cur.source, verified_at: now, revision: cur.revision + 1,
+            }));
+            updatedPrices.push({ id: cur.id, minor: r.minor, base: cur.revision });
+          }
+        } else {
+          let vid = r.variantId;
+          if (!vid) {
+            vid = newId();
+            newVariants.push({ id: vid, product_id: pid, label: tierLabel(r.qty), active: true, revision: 1 });
+            changes.push(buildUpsert("variant", vid, 0, { id: vid, product_id: pid, label: tierLabel(r.qty), active: true, revision: 1 }));
+          }
+          const prid = newId();
+          newPrices.push({ id: prid, product_id: pid, variant_id: vid, amount_minor: r.minor, currency: "PEN", source: "panel", verified_at: now, revision: 1 });
+          changes.push(buildUpsert("price", prid, 0, { id: prid, product_id: pid, variant_id: vid, amount_minor: r.minor, currency: "PEN", source: "panel", verified_at: now, revision: 1 }));
+        }
+      }
+      setSaving(true);
+      await pushChanges(changes);
       set((p) => {
         const variants = [...p.variants];
         let prices = [...p.prices];
-        // eliminados
         for (const r of eRows.filter((x) => x.del)) {
           if (r.variantId) {
             const vi = variants.findIndex((v) => v.id === r.variantId);
@@ -164,29 +222,24 @@ export default function Catalogo(props: { s: WebState; set: React.Dispatch<React
           }
           prices = prices.filter((x) => x.id !== r.priceId && x.variant_id !== r.variantId);
         }
-        // actualizados y nuevos
-        for (const r of parsed) {
-          if (r.priceId) {
-            prices = prices.map((x) => (x.id === r.priceId ? { ...x, amount_minor: r.minor, verified_at: now, revision: x.revision + 1 } : x));
-          } else {
-            let vid = r.variantId;
-            if (!vid) {
-              vid = newId();
-              variants.push({ id: vid, product_id: pid, label: tierLabel(r.qty), active: true, revision: 1 });
-            }
-            prices.push({ id: newId(), product_id: pid, variant_id: vid, amount_minor: r.minor, currency: "PEN", source: "panel", verified_at: now, revision: 1 });
-          }
+        for (const u of updatedPrices) {
+          prices = prices.map((x) => (x.id === u.id ? { ...x, amount_minor: u.minor, verified_at: now, revision: u.base + 1 } : x));
         }
+        for (const v of newVariants) variants.push(v);
+        for (const pr of newPrices) prices.push(pr);
         return audit({
           ...p,
-          products: p.products.map((x) => (x.id === pid ? { ...x, name: eName.trim(), fabric: eFabric.trim() || undefined, brand: eBrand.trim() || undefined, updated_at: now } : x)),
+          products: p.products.map((x) => (x.id === pid ? { ...x, name: eName.trim(), fabric: eFabric.trim() || undefined, brand: eBrand.trim() || undefined, updated_at: now, revision: x.revision + 1 } : x)),
           variants,
           prices,
         }, "producto.editar", eName.trim());
       });
       setEditingId(null);
+      toast.add({ description: "Cambios guardados en tu nube." });
     } catch (e) {
       toast.add({ title: "Error", description: e instanceof Error ? e.message : "error" });
+    } finally {
+      setSaving(false);
     }
   }
 
@@ -199,7 +252,7 @@ export default function Catalogo(props: { s: WebState; set: React.Dispatch<React
             <span className="text-primary"><PackagePlus size={18} /></span>
             <h2 className="text-base font-semibold tracking-tight sm:text-[17px]">Nuevo producto</h2>
           </div>
-          <form onSubmit={save} className="mt-3 grid gap-3">
+          <form onSubmit={(e) => void save(e)} className="mt-3 grid gap-3">
             <Field label="Marca" htmlFor="c-brand">
               <Select value={brand} onValueChange={setBrand}>
                 <SelectTrigger id="c-brand" />
@@ -237,7 +290,7 @@ export default function Catalogo(props: { s: WebState; set: React.Dispatch<React
                 ))}
               </div>
             </div>
-            <div><Button type="submit" className="w-full" size="lg">Guardar producto</Button></div>
+            <div><Button type="submit" className="w-full" size="lg" disabled={saving}>{saving ? "Guardando en tu nube…" : "Guardar producto"}</Button></div>
           </form>
         </div>
 
@@ -357,7 +410,7 @@ export default function Catalogo(props: { s: WebState; set: React.Dispatch<React
                 </div>
                 <div className="flex justify-end gap-2">
                   <Button size="sm" variant="secondary" onClick={() => setEditingId(null)}>Cancelar</Button>
-                  <Button size="sm" onClick={() => saveEdit(editingId)}>Guardar cambios</Button>
+                  <Button size="sm" onClick={() => void saveEdit(editingId)} disabled={saving}>{saving ? "Guardando…" : "Guardar cambios"}</Button>
                 </div>
               </div>
             </Dialog>
@@ -375,7 +428,7 @@ export default function Catalogo(props: { s: WebState; set: React.Dispatch<React
                   </Field>
                   <div className="flex justify-end gap-2">
                     <Button size="sm" variant="secondary" onClick={() => { setDeleteId(null); setDeleteName(""); }}>Cancelar</Button>
-                    <Button size="sm" variant="destructive" disabled={!ok} onClick={() => removeProduct(deleteId)}>Eliminar</Button>
+                    <Button size="sm" variant="destructive" disabled={!ok} onClick={() => void removeProduct(deleteId)}>Eliminar</Button>
                   </div>
                 </div>
               </Dialog>

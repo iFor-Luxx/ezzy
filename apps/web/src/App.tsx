@@ -6,10 +6,11 @@ import Contexto from "./tabs/Contexto";
 import Sincronizacion from "./tabs/Sincronizacion";
 import Respaldo from "./tabs/Respaldo";
 import Configuracion from "./tabs/Configuracion";
-import { useWebState } from "./lib/store";
-import { Toaster } from "./components/ui/toast";
+import { useWebState, audit } from "./lib/store";
+import { Toaster, toast } from "./components/ui/toast";
 import Login from "./screens/Login";
 import { isAuthed } from "./lib/auth";
+import { pullWebState } from "./lib/sync";
 
 const TABS = [
   { id: "catalogo", label: "Catálogo", icon: LayoutGrid },
@@ -26,6 +27,29 @@ export default function App() {
   const [s, set] = useWebState();
   const [tab, setTab] = React.useState<TabId>("catalogo");
   const [authed, setAuthed] = React.useState(isAuthed);
+  const [cloud, setCloud] = React.useState<"idle" | "loading" | "ready" | "error">("idle");
+
+  // Fuente de verdad: la nube. Al entrar (cualquier PC), una sola descarga.
+  React.useEffect(() => {
+    if (!authed || cloud !== "idle") return;
+    setCloud("loading");
+    let alive = true;
+    pullWebState(s.audits)
+      .then((fresh) => {
+        if (!alive) return;
+        set(() => audit(fresh, "nube.cargar", `${fresh.products.length} prod, ${fresh.messages.length} msg`));
+        setCloud("ready");
+      })
+      .catch((e) => {
+        if (!alive) return;
+        setCloud("error");
+        toast.add({ title: "Nube no disponible", description: e instanceof Error ? `${e.message} · mostrando caché local` : "mostrando caché local" });
+      });
+    return () => {
+      alive = false;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [authed]);
 
   if (!authed) {
     return (
@@ -43,9 +67,11 @@ export default function App() {
           <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-primary text-base font-bold text-primary-foreground sm:h-9 sm:w-9 sm:text-[17px]">e</div>
           <div>
             <p className="text-base font-semibold leading-tight tracking-tight sm:text-[17px]">Ezzy</p>
-            <p className="text-xs leading-tight text-muted-foreground">Panel privado · tus datos quedan en este navegador</p>
+            <p className="text-xs leading-tight text-muted-foreground">Panel privado · tus datos viven en tu nube</p>
           </div>
-          <span className="ml-auto hidden rounded-full bg-chart-2/10 px-3 py-1 text-xs font-medium text-chart-2 sm:inline">local</span>
+          <span className="ml-auto hidden rounded-full bg-chart-2/10 px-3 py-1 text-xs font-medium text-chart-2 sm:inline">
+            {cloud === "loading" ? "nube…" : cloud === "ready" ? "nube" : cloud === "error" ? "local (sin nube)" : "nube"}
+          </span>
         </div>
       </header>
       <div className="mx-auto max-w-4xl px-4 py-4 sm:px-6 sm:py-6">

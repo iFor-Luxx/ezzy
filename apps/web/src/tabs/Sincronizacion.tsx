@@ -2,7 +2,8 @@ import React from "react";
 import { ArrowLeftRight, CloudSun, Upload, Download, RefreshCw } from "lucide-react";
 import { Button, Card, Field, Input, Badge } from "../components/ui";
 import { buildBridge, parseBridge, audit, type WebState } from "../lib/store";
-import { parseStatus, pct, barTone, WORKER_KEY, STATUS_KEY, DEFAULT_WORKER_URL, type CloudStatusView } from "../lib/cloud";
+import { parseStatus, pct, barTone, WORKER_KEY, STATUS_KEY, type CloudStatusView } from "../lib/cloud";
+import { getWorkerUrl } from "../lib/auth";
 import ExplorerNube from "./ExplorerNube";
 import { toast } from "../components/ui/toast";
 
@@ -27,13 +28,7 @@ function Bar(props: { label: string; used: number; cap: number; unit: string }) 
 // Estado de la nube: lee /v1/status de tu Worker desplegado (sin tokens en el navegador).
 export default function Sincronizacion(props: { s: WebState; set: React.Dispatch<React.SetStateAction<WebState>> }) {
   const { s, set } = props;
-  const [workerUrl, setWorkerUrl] = React.useState(() => {
-    try {
-      return localStorage.getItem(WORKER_KEY) ?? DEFAULT_WORKER_URL;
-    } catch {
-      return DEFAULT_WORKER_URL;
-    }
-  });
+  const [workerUrl, setWorkerUrl] = React.useState(() => getWorkerUrl());
   const [cloud, setCloud] = React.useState<CloudStatusView | null>(() => {
     try {
       const raw = localStorage.getItem(STATUS_KEY);
@@ -43,6 +38,7 @@ export default function Sincronizacion(props: { s: WebState; set: React.Dispatch
     }
   });
   const [checking, setChecking] = React.useState(false);
+  const autoRef = React.useRef(false);
 
   function download(): void {
     const blob = new Blob([JSON.stringify(buildBridge(s), null, 2)], { type: "application/json" });
@@ -105,6 +101,14 @@ export default function Sincronizacion(props: { s: WebState; set: React.Dispatch
       setChecking(false);
     }
   }
+
+  // Auto-consulta una vez al abrir (costo: 1 petición). Sin intervalos.
+  React.useEffect(() => {
+    if (autoRef.current) return;
+    autoRef.current = true;
+    if (getWorkerUrl().trim().startsWith("https://")) void checkCloud();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   return (
     <>

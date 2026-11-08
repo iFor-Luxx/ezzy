@@ -49,6 +49,7 @@ export default function ExplorerNube(props: { workerUrl: string }) {
   const [openId, setOpenId] = React.useState<string | null>(null);
   const [editing, setEditing] = React.useState<{ key: string; text: string } | null>(null);
   const [busy, setBusy] = React.useState(false);
+  const autoRef = React.useRef(false);
 
   function needBase(): string {
     if (!base.startsWith("https://")) throw new Error("primero configura la URL del Worker arriba");
@@ -163,6 +164,14 @@ export default function ExplorerNube(props: { workerUrl: string }) {
       setBusy(false);
     }
   }
+
+  // Auto-carga una vez si ya hay instalación (la principal la hace App; esto es respaldo).
+  React.useEffect(() => {
+    if (autoRef.current) return;
+    autoRef.current = true;
+    if (base.startsWith("https://") && instId.trim()) void load();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const groups = React.useMemo(() => {
     const g = new Map<string, RemoteRecord[]>();

@@ -1,5 +1,4 @@
-# Auth persistente en D1 (gratis): el PIN sobrevive reinicios del Worker.
-# Datos sync aún en memoria por isolate (piloto).
+# Auth + datos persistentes en D1 (gratis). La nube es la fuente de verdad.
 name = "ezzy-sync"
 main = "src/worker.ts"
 compatibility_date = "2026-11-07"

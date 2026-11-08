@@ -2,6 +2,8 @@ import React from "react";
 import { MessageSquarePlus, Search, Star } from "lucide-react";
 import { Button, Card, Field, Input, Textarea, Badge, Empty } from "../components/ui";
 import { newId, nowIso, audit, type WebState } from "../lib/store";
+import { messageChanges, pushChanges } from "../lib/sync";
+import { buildUpsert } from "../lib/cloud";
 import { toast } from "../components/ui/toast";
 
 export default function Mensajes(props: { s: WebState; set: React.Dispatch<React.SetStateAction<WebState>> }) {
@@ -9,6 +11,7 @@ export default function Mensajes(props: { s: WebState; set: React.Dispatch<React
   const [q, setQ] = React.useState("");
   const [title, setTitle] = React.useState("");
   const [body, setBody] = React.useState("Hola {{nombre}}, ");
+  const [busy, setBusy] = React.useState(false);
 
   const rows = s.messages.filter((m) => {
     const n = q.trim().toLowerCase();
@@ -16,28 +19,51 @@ export default function Mensajes(props: { s: WebState; set: React.Dispatch<React
     return `${m.title} ${m.body} ${m.intent}`.toLowerCase().includes(n);
   });
 
-  function add(e: React.FormEvent): void {
+  async function add(e: React.FormEvent): Promise<void> {
     e.preventDefault();
+    if (busy) return;
     try {
       if (!title.trim() || !body.trim()) throw new Error("título y cuerpo requeridos");
       const now = nowIso();
-      set((p) => audit({
-        ...p,
-        messages: [...p.messages, { id: newId(), title: title.trim(), body, intent: "general", channel: "whatsapp", tags: [], status: "approved", verified_at: now, revision: 1 }],
-      }, "mensaje.crear", title.trim()));
+      const row = { id: newId(), title: title.trim(), body, intent: "general", channel: "whatsapp", tags: [] as string[], status: "approved" as const, verified_at: now, revision: 1 };
+      setBusy(true);
+      await pushChanges(messageChanges(row, 0));
+      set((p) => audit({ ...p, messages: [...p.messages, row] }, "mensaje.crear", title.trim()));
       setTitle("");
       setBody("Hola {{nombre}}, ");
-      toast.add({ description: `"${title.trim()}" aprobado.` });
+      toast.add({ description: `"${row.title}" guardado en tu nube.` });
     } catch (ex) {
       toast.add({ title: "Error", description: ex instanceof Error ? ex.message : "error" });
+    } finally {
+      setBusy(false);
     }
   }
 
-  function setFav(id: string, slot: string): void {
-    set((p) => ({
-      ...p,
-      messages: p.messages.map((m) => (m.id === id ? { ...m, command_alias: `favorito-${slot}` } : m.command_alias === `favorito-${slot}` ? { ...m, command_alias: undefined } : m)),
-    }));
+  async function setFav(id: string, slot: string): Promise<void> {
+    const target = s.messages.find((m) => m.id === id);
+    if (!target || busy) return;
+    try {
+      setBusy(true);
+      const alias = `favorito-${slot}`;
+      const next = target.command_alias === alias ? undefined : alias;
+      await pushChanges([buildUpsert("approved_message", target.id, target.revision, {
+        id: target.id, title: target.title, body: target.body, intent: target.intent,
+        channel: target.channel, tags: target.tags, status: target.status,
+        verified_at: target.verified_at, command_alias: next, revision: target.revision + 1,
+      })]);
+      set((p) => ({
+        ...p,
+        messages: p.messages.map((m) => {
+          if (m.id === id) return { ...m, command_alias: next, revision: m.revision + 1 };
+          if (m.command_alias === alias) return { ...m, command_alias: undefined };
+          return m;
+        }),
+      }));
+    } catch (ex) {
+      toast.add({ title: "Error", description: ex instanceof Error ? ex.message : "no se pudo guardar" });
+    } finally {
+      setBusy(false);
+    }
   }
 
   return (
@@ -49,10 +75,10 @@ export default function Mensajes(props: { s: WebState; set: React.Dispatch<React
             <h2 className="text-base font-semibold tracking-tight sm:text-[17px]">Nuevo mensaje aprobado</h2>
           </div>
           <p className="mb-3 text-[13px] text-muted-foreground">Usa {"{{variables}}"}. Se revisa antes de copiar; nunca se envía solo.</p>
-          <form onSubmit={add} className="grid gap-3">
+          <form onSubmit={(e) => void add(e)} className="grid gap-3">
             <Field label="Título" htmlFor="m-title"><Input id="m-title" value={title} onChange={(e) => setTitle(e.target.value)} /></Field>
             <Field label="Cuerpo" htmlFor="m-body"><Textarea id="m-body" value={body} onChange={(e) => setBody(e.target.value)} /></Field>
-            <div><Button type="submit">Aprobar mensaje</Button></div>
+            <div><Button type="submit" disabled={busy}>{busy ? "Guardando…" : "Aprobar mensaje"}</Button></div>
           </form>
         </div>
         <div aria-hidden="true" className="bg-border max-lg:-mx-4 max-lg:h-px max-lg:w-auto lg:-my-4 lg:w-px lg:self-stretch" />
@@ -77,7 +103,7 @@ export default function Mensajes(props: { s: WebState; set: React.Dispatch<React
                   <p className="ez-pre mt-2">{m.body}</p>
                   <div className="mt-2 flex gap-2">
                     {[1, 2, 3].map((n) => (
-                      <Button key={n} size="sm" variant="secondary" onClick={() => setFav(m.id, String(n))}>Fav {n}</Button>
+                      <Button key={n} size="sm" variant="secondary" disabled={busy} onClick={() => void setFav(m.id, String(n))}>Fav {n}</Button>
                     ))}
                   </div>
                 </div>
