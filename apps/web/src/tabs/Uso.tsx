@@ -1,6 +1,7 @@
 import React from "react";
 import { Gauge } from "lucide-react";
 import { Card, Badge } from "../components/ui";
+import { Skeleton } from "../components/ui/skeleton";
 import { pct, barTone, type CloudStatusView } from "../lib/cloud";
 import { refreshStatus } from "../lib/sync";
 
@@ -22,31 +23,55 @@ function Bar(props: { label: string; used: number; cap: number; unit: string }) 
 }
 
 // Uso real de tu servidor: contadores durables en D1 + filas guardadas.
-// 1 sola consulta al entrar a la sección. Para recargar, sal y vuelve a entrar.
-export default function Uso() {
+// 1 sola consulta a la vez. Al volver a la sección se trae fresco sin parpadear:
+// si ya hay datos se muestran hasta que llegan los nuevos; si no hay, esqueletos.
+export default function Uso(props: { active: boolean }) {
   const [st, setSt] = React.useState<CloudStatusView | null>(null);
   const [err, setErr] = React.useState<string | null>(null);
+  const busyRef = React.useRef(false);
+  const hasData = React.useRef(false);
 
   React.useEffect(() => {
+    if (!props.active || busyRef.current) return;
+    busyRef.current = true;
     let alive = true;
     refreshStatus()
       .then((s) => {
-        if (alive) setSt(s);
+        if (!alive) return;
+        hasData.current = true;
+        setSt(s);
+        setErr(null);
       })
       .catch((e) => {
-        if (alive) setErr(e instanceof Error ? e.message : "no se pudo consultar");
+        if (!alive || hasData.current) return;
+        setErr(e instanceof Error ? e.message : "no se pudo consultar");
+      })
+      .finally(() => {
+        busyRef.current = false;
       });
     return () => {
       alive = false;
     };
-  }, []);
+  }, [props.active]);
 
   return (
     <Card title="Uso de tu servidor" icon={<Gauge size={18} />} sub="Medido por tu Worker y guardado en D1. Igual desde cualquier PC."
       action={st ? <Badge tone={st.blocked ? "bad" : "ok"}>{st.blocked ? `bloqueado ${st.code ?? ""}` : "en línea"}</Badge> : undefined}>
       <div className="grid gap-3">
         {err ? <p className="text-[13px] text-destructive">{err}</p> : null}
-        {!st && !err ? <p className="text-[13px] text-muted-foreground">Consultando a tu servidor…</p> : null}
+        {!st && !err ? (
+          <div className="grid gap-3" aria-busy="true" aria-label="Cargando uso">
+            {[0, 1, 2].map((i) => (
+              <div key={i} className="grid gap-1">
+                <div className="flex items-baseline justify-between">
+                  <Skeleton className="h-3 w-28" />
+                  <Skeleton className="h-3 w-40" />
+                </div>
+                <Skeleton className="h-2 w-full rounded-full" />
+              </div>
+            ))}
+          </div>
+        ) : null}
         {st ? (
           <>
             <p className="text-[13px] text-muted-foreground">
