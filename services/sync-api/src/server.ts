@@ -204,37 +204,117 @@ function decodeCursor(cursor: string): number {
   }
 }
 
+function utcDay(): string {
+  return new Date().toISOString().slice(0, 10);
+}
+
+export interface Usage {
+  day: string;
+  req: number;
+  reads: number;
+  writes: number;
+}
+
+/** Contadores de uso. Memoria para tests, D1 en prod (sobreviven reinicios). */
+export interface UsageStore {
+  track(req: number, reads: number, writes: number): Promise<void>;
+  today(): Promise<Usage>;
+}
+
+export class MemoryUsageStore implements UsageStore {
+  used = { req: 0, reads: 0, writes: 0 };
+  async track(req: number, reads: number, writes: number): Promise<void> {
+    this.used.req += req;
+    this.used.reads += reads;
+    this.used.writes += writes;
+  }
+  async today(): Promise<Usage> {
+    return { day: utcDay(), ...this.used };
+  }
+}
+
+const USAGE_SCHEMA = [
+  "CREATE TABLE IF NOT EXISTS usage_daily (day TEXT PRIMARY KEY, req INTEGER NOT NULL DEFAULT 0, reads INTEGER NOT NULL DEFAULT 0, writes INTEGER NOT NULL DEFAULT 0)",
+];
+
+/** Uso durable en D1: 1 escritura por petición. Con tráfico personal es ~nada del Free. */
+export class D1UsageStore implements UsageStore {
+  private db: D1Database;
+  private ready: Promise<void> | null = null;
+
+  constructor(db: D1Database) {
+    this.db = db;
+  }
+
+  private schema(): Promise<void> {
+    if (!this.ready) {
+      this.ready = (async () => {
+        await this.db.batch(USAGE_SCHEMA.map((q) => this.db.prepare(q)));
+      })();
+    }
+    return this.ready;
+  }
+
+  async track(req: number, reads: number, writes: number): Promise<void> {
+    if (!req && !reads && !writes) return;
+    await this.schema();
+    await this.db
+      .prepare(
+        "INSERT INTO usage_daily (day, req, reads, writes) VALUES (?, ?, ?, ?) ON CONFLICT(day) DO UPDATE SET req = req + excluded.req, reads = reads + excluded.reads, writes = writes + excluded.writes"
+      )
+      .bind(utcDay(), req, reads, writes)
+      .run();
+  }
+
+  async today(): Promise<Usage> {
+    await this.schema();
+    const day = utcDay();
+    const row = await this.db
+      .prepare("SELECT req, reads, writes FROM usage_daily WHERE day = ?")
+      .bind(day)
+      .first<{ req?: unknown; reads?: unknown; writes?: unknown }>();
+    const n = (v: unknown): number => (typeof v === "number" && Number.isFinite(v) && v >= 0 ? v : 0);
+    return { day, req: n(row?.req), reads: n(row?.reads), writes: n(row?.writes) };
+  }
+}
+
 export class SyncServer {
   store: RecordStore;
   auth: AuthPort;
+  usage: UsageStore;
   quotaKnown = true;
-  used = { req: 0, reads: 0, writes: 0 };
   /** Plan declarado al desplegar + fecha de verificación manual. Sin esto, el panel lo muestra "sin verificar". */
   plan: "free" = "free";
   planVerifiedAt: string | null = null;
 
-  constructor(auth: AuthPort, store?: RecordStore) {
+  constructor(auth: AuthPort, store?: RecordStore, usage?: UsageStore) {
     this.auth = auth;
     this.store = store ?? new MemoryRecordStore();
+    this.usage = usage ?? new MemoryUsageStore();
   }
 
   setPlanVerified(atIso: string): void {
     this.planVerifiedAt = atIso;
   }
 
-  /** Estado para el panel: uso vs topes, cuota y conteos. Sin secretos. 2 reads D1. */
+  /** Estado para el panel: uso durable del día + almacenado real. Sin secretos. */
   async status(): Promise<CloudStatus> {
-    const q = evalQuota(this.used, this.quotaKnown);
+    const used = await this.usage.today();
+    const q = evalQuota(used, this.quotaKnown);
+    const records = await this.store.count();
+    const installations = await this.auth.enabledCount();
     return {
       schemaVersion: 1,
       ts: new Date().toISOString(),
       plan: this.plan,
       planVerifiedAt: this.planVerifiedAt,
-      used: { ...this.used },
+      used: { req: used.req, reads: used.reads, writes: used.writes },
+      day: used.day,
       caps: { ...FREE_CAPS },
-      quota: { warnRatio: warnRatio(this.used), blocked: !q.allow, code: q.code },
-      entities: await this.store.count(),
-      installations: await this.auth.enabledCount(),
+      quota: { warnRatio: warnRatio(used), blocked: !q.allow, code: q.code },
+      entities: records,
+      installations,
+      storage: { records, installations, keys: await this.store.logLength() },
     };
   }
 
@@ -243,12 +323,14 @@ export class SyncServer {
     schemaVersion: number;
     changes: { idempotencyKey: string; entity_type: string; entity_id: string; operation: "upsert" | "tombstone"; revision: number; base_revision: number; payload: Record<string, unknown> }[];
   }): Promise<{ applied: string[]; conflicts: { entity_type: string; entity_id: string }[]; error?: object }> {
-    this.used.req += 1;
+    let rq = 1, rd = 0, wr = 0;
+    try {
     if (!(await this.auth.isAuthorized(input.installationId)))
       return { applied: [], conflicts: [], error: { schemaVersion: 1, error: { code: "UNAUTHORIZED", message: "no enrolado o revocado", retryable: false } } };
     if (input.schemaVersion !== SCHEMA_VERSION)
       return { applied: [], conflicts: [], error: { schemaVersion: 1, error: { code: "UNSUPPORTED_SCHEMA", message: "schema no soportado", retryable: false } } };
-    const q = evalQuota(this.used, this.quotaKnown);
+    const cur = await this.usage.today();
+    const q = evalQuota({ req: cur.req + rq, reads: cur.reads + rd, writes: cur.writes + wr }, this.quotaKnown);
     if (!q.allow)
       return { applied: [], conflicts: [], error: { schemaVersion: 1, error: { code: q.code, message: "bloqueado por cuota/costo", retryable: false } } };
     const size = checkBatchSize(input.changes, JSON.stringify(input.changes).length);
@@ -269,7 +351,7 @@ export class SyncServer {
         const s = toSyncDto(c.entity_type, { ...(c.payload as object), revision: c.revision } as Record<string, unknown>);
         if (!s.ok) return { applied, conflicts, error: { schemaVersion: 1, error: { code: "VALIDATION_ERROR", message: s.reason, retryable: false } } };
         const cur = await this.store.get(c.entity_type, c.entity_id);
-        this.used.reads += 1;
+        rd += 1;
         const remoteRev = cur?.revision ?? 0;
         // Conflicto si el servidor avanzó desde base_revision (el cliente parte de base).
         if (cur && detectSyncConflict(c.base_revision, c.revision, remoteRev)) {
@@ -287,21 +369,23 @@ export class SyncServer {
     // Un solo batch de escritura: menos round-trips, mismo conteo de filas.
     if (pendingWrites.length > 0) {
       await this.store.setMany(pendingWrites);
-      this.used.writes += pendingWrites.length;
+      wr += pendingWrites.length;
     }
     for (const k of pendingKeys) await this.store.addKey(k);
     return { applied, conflicts };
+    } finally {
+      await this.usage.track(rq, rd, wr);
+    }
   }
 
   /** Lista completa para el panel (ver/editar/eliminar). Requiere instalación enrolada. 1 query D1. */
   async list(): Promise<StoredRecord[]> {
-    this.used.reads += 1;
+    await this.usage.track(0, 1, 0);
     return this.store.list();
   }
 
   async pull(cursor?: string): Promise<{ cursor: string; changes: { entity_type: string; entity_id: string; revision: number; deleted: boolean }[] }> {
-    this.used.req += 1;
-    this.used.reads += 1;
+    await this.usage.track(1, 1, 0);
     let idx = 0;
     if (cursor) {
       idx = decodeCursor(cursor);

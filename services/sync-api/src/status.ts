@@ -7,6 +7,10 @@ export interface CloudStatus {
   plan: "free";
   planVerifiedAt: string | null;
   used: { req: number; reads: number; writes: number };
+  /** Día UTC al que pertenecen los contadores (duran en D1, no se reinician). */
+  day: string;
+  /** Almacenado real en D1: filas por tabla. */
+  storage: { records: number; installations: number; keys: number };
   caps: typeof FREE_CAPS;
   quota: { warnRatio: number; blocked: boolean; code?: "QUOTA_BLOCKED" | "COST_GUARD_BLOCKED" };
   entities: number;

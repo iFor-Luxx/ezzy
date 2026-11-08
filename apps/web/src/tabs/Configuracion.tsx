@@ -1,11 +1,15 @@
 import React from "react";
-import { Sparkles } from "lucide-react";
+import { Sparkles, Gauge } from "lucide-react";
 import Asistente from "./Asistente";
+import Uso from "./Uso";
 import type { WebState } from "../lib/store";
 
 // Ajustes estilo macOS: sidebar gris con iconos en mosaico + contenido blanco con título.
 // Para agregar una sección futura: añade su entrada aquí y su caso abajo.
-const SECTIONS = [{ id: "asistente", label: "Asistente IA", icon: Sparkles }] as const;
+const SECTIONS = [
+  { id: "asistente", label: "Asistente IA", icon: Sparkles },
+  { id: "uso", label: "Uso", icon: Gauge },
+] as const;
 
 export default function Configuracion(props: { s: WebState; set: React.Dispatch<React.SetStateAction<WebState>> }) {
   const [section, setSection] = React.useState<string>("asistente");
@@ -36,6 +40,7 @@ export default function Configuracion(props: { s: WebState; set: React.Dispatch<
       <div className="min-w-0 border-t border-border p-4 md:border-l md:border-t-0">
         <h1 className="mb-4 text-lg font-bold tracking-tight sm:text-[19px]">{current.label}</h1>
         {section === "asistente" && <Asistente s={props.s} set={props.set} />}
+        {section === "uso" && <Uso />}
       </div>
     </div>
   );

@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test";
-import { SyncServer } from "./server";
+import { SyncServer, MemoryUsageStore } from "./server";
 import { AuthStore } from "./auth";
 import { evalQuota } from "./quota_guard";
 
@@ -49,9 +49,9 @@ describe("sync-api Fase 5 (piloto sintético)", () => {
     s.quotaKnown = false;
     expect((await s.push({ installationId: "inst-1", schemaVersion: 1, changes: [] })).error).toBeDefined();
     s.quotaKnown = true;
-    s.used = { req: 80000, reads: 0, writes: 0 };
-    expect(evalQuota(s.used, true).allow).toBe(false);
-    s.used = { req: 0, reads: 0, writes: 0 };
+    (s.usage as MemoryUsageStore).used = { req: 80000, reads: 0, writes: 0 };
+    expect(evalQuota(await s.usage.today(), true).allow).toBe(false);
+    (s.usage as MemoryUsageStore).used = { req: 0, reads: 0, writes: 0 };
     await s.auth.revoke("inst-1");
     expect((await s.push({ installationId: "inst-1", schemaVersion: 1, changes: [] })).error).toBeDefined();
   });

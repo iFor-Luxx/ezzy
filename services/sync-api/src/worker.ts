@@ -3,7 +3,7 @@
 // Auth por header x-ezzy-installation (instalación enrolada). /v1/status es público mínimo (sin contenido).
 // Auth + datos persistentes en D1 (una sola fuente de verdad aunque Cloudflare recicle isolates).
 // Costo cero: sin polling, 1 query por data/pull, 2 counts por status, push en 1 batch.
-import { SyncServer, D1RecordStore } from "./server";
+import { SyncServer, D1RecordStore, D1UsageStore } from "./server";
 import { AuthStore, D1AuthStore, type AuthPort, type D1Database } from "./auth";
 import { SCHEMA_VERSION } from "@ezzy/contracts";
 import { errorEnvelope } from "@ezzy/sync-client";
@@ -23,7 +23,7 @@ function getServer(env?: Env): SyncServer {
   if (!db) return memServer;
   let s = servers.get(db);
   if (!s) {
-    s = new SyncServer(new D1AuthStore(db), new D1RecordStore(db));
+    s = new SyncServer(new D1AuthStore(db), new D1RecordStore(db), new D1UsageStore(db));
     servers.set(db, s);
   }
   return s;

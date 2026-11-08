@@ -5,11 +5,13 @@ export interface CloudStatusView {
   plan: string;
   planVerifiedAt: string | null;
   used: { req: number; reads: number; writes: number };
+  day: string;
   caps: { workersReqDay: number; d1ReadsDay: number; d1WritesDay: number };
   blocked: boolean;
   code?: string;
   entities: number;
   installations: number;
+  storage: { records: number; installations: number; keys: number };
 }
 
 export const WORKER_KEY = "ezzy.web.worker";
@@ -43,16 +45,23 @@ export function parseStatus(json: unknown): CloudStatusView {
   const entities = num(o["entities"]);
   const installations = num(o["installations"]);
   if (Number.isNaN(entities) || Number.isNaN(installations)) throw new Error("conteos inválidos");
+  const st = o["storage"] as Record<string, unknown> | undefined;
+  const sNum = (k: string): number => {
+    const v = st?.[k];
+    return typeof v === "number" && Number.isFinite(v) && v >= 0 ? v : 0;
+  };
   return {
     ts: typeof o["ts"] === "string" ? o["ts"] : new Date().toISOString(),
     plan: typeof o["plan"] === "string" ? o["plan"] : "desconocido",
     planVerifiedAt: typeof o["planVerifiedAt"] === "string" ? o["planVerifiedAt"] : null,
     used: { req, reads, writes },
+    day: typeof o["day"] === "string" ? (o["day"] as string) : "",
     caps: { workersReqDay: capReq, d1ReadsDay: capReads, d1WritesDay: capWrites },
     blocked: (quota?.["blocked"] as boolean) === true,
     code: typeof quota?.["code"] === "string" ? (quota["code"] as string) : undefined,
     entities,
     installations,
+    storage: { records: sNum("records"), installations: sNum("installations"), keys: sNum("keys") },
   };
 }
 
