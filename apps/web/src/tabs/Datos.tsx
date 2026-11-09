@@ -1,6 +1,7 @@
 import React from "react";
 import { ChevronRight } from "lucide-react";
-import { Badge } from "../components/ui";
+import { Badge, Button } from "../components/ui";
+import { Table, TableHeader, TableBody, TableHead, TableRow, TableCell } from "../components/ui/table";
 import { Skeleton } from "../components/ui/skeleton";
 import { Empty } from "../components/ui";
 import { refreshRawRecords } from "../lib/sync";
@@ -82,6 +83,103 @@ function TypeGroup(props: { type: string; rows: RemoteRecord[] }) {
     </div>
   );
 }
+function shortId(id: string): string {
+  return id.length > 8 ? `${id.slice(0, 8)}…` : id;
+}
+
+function TableWrap(props: { title: string; count: number; head: string[]; children: React.ReactNode }) {
+  return (
+    <div className="grid gap-1">
+      <p className="mono px-2 text-xs font-medium text-foreground">{props.title} <span className="text-muted-foreground">{props.count}</span></p>
+      <div className="overflow-hidden rounded-xl border border-border">
+        <Table>
+          <TableHeader>
+            <TableRow>
+              {props.head.map((h) => (
+                <TableHead key={h}>{h}</TableHead>
+              ))}
+            </TableRow>
+          </TableHeader>
+          <TableBody>{props.children}</TableBody>
+        </Table>
+      </div>
+    </div>
+  );
+}
+
+function TablesView(props: { records: RemoteRecord[] }) {
+  const vivos = props.records.filter((r) => !r.deleted && r.dto);
+  const byType = (t: string): Record<string, unknown>[] =>
+    vivos.filter((r) => r.entity_type === t).map((r) => ({ _rev: r.revision, ...(r.dto as Record<string, unknown>) }));
+  const products = byType("product");
+  const variants = byType("variant");
+  const prices = byType("price");
+  const messages = byType("approved_message");
+  const rest = vivos.filter((r) => !["product", "variant", "price", "approved_message"].includes(r.entity_type));
+  const str = (v: unknown): string => (typeof v === "string" ? v : "—");
+  return (
+    <div className="grid gap-3">
+      {products.length > 0 ? (
+        <TableWrap title="product" count={products.length} head={["Nombre", "Marca", "Tela", "Estado", "Rev"]}>
+          {products.map((p) => (
+            <TableRow key={String(p["id"])}>
+              <TableCell className="font-medium">{str(p["name"])}</TableCell>
+              <TableCell>{str(p["brand"])}</TableCell>
+              <TableCell className="max-w-40 truncate">{str(p["fabric"]) || str(p["description"])}</TableCell>
+              <TableCell>{str(p["status"])}</TableCell>
+              <TableCell className="mono">{String(p["_rev"])}</TableCell>
+            </TableRow>
+          ))}
+        </TableWrap>
+      ) : null}
+      {variants.length > 0 ? (
+        <TableWrap title="variant" count={variants.length} head={["Etiqueta", "Producto", "Activa", "Rev"]}>
+          {variants.map((v) => (
+            <TableRow key={String(v["id"])}>
+              <TableCell className="font-medium">{str(v["label"])}</TableCell>
+              <TableCell className="mono" title={str(v["product_id"])}>{shortId(str(v["product_id"]))}</TableCell>
+              <TableCell>{v["active"] === false ? "no" : "sí"}</TableCell>
+              <TableCell className="mono">{String(v["_rev"])}</TableCell>
+            </TableRow>
+          ))}
+        </TableWrap>
+      ) : null}
+      {prices.length > 0 ? (
+        <TableWrap title="price" count={prices.length} head={["Monto", "Moneda", "Producto", "Rev"]}>
+          {prices.map((p) => (
+            <TableRow key={String(p["id"])}>
+              <TableCell className="font-medium tabular-nums">{typeof p["amount_minor"] === "number" ? (p["amount_minor"] as number / 100).toFixed(2) : "—"}</TableCell>
+              <TableCell>{str(p["currency"])}</TableCell>
+              <TableCell className="mono" title={str(p["product_id"])}>{shortId(str(p["product_id"]))}</TableCell>
+              <TableCell className="mono">{String(p["_rev"])}</TableCell>
+            </TableRow>
+          ))}
+        </TableWrap>
+      ) : null}
+      {messages.length > 0 ? (
+        <TableWrap title="approved_message" count={messages.length} head={["Título", "Intención", "Canal", "Estado", "Rev"]}>
+          {messages.map((m) => (
+            <TableRow key={String(m["id"])}>
+              <TableCell className="font-medium">{str(m["title"])}</TableCell>
+              <TableCell>{str(m["intent"])}</TableCell>
+              <TableCell>{str(m["channel"])}</TableCell>
+              <TableCell>{str(m["status"])}</TableCell>
+              <TableCell className="mono">{String(m["_rev"])}</TableCell>
+            </TableRow>
+          ))}
+        </TableWrap>
+      ) : null}
+      {rest.length > 0 ? (
+        <div className="grid gap-1">
+          <p className="mono px-2 text-xs font-medium text-foreground">otros <span className="text-muted-foreground">{rest.length}</span></p>
+          {rest.map((r) => (
+            <RecordNode key={`${r.entity_type}:${r.entity_id}`} rec={r} />
+          ))}
+        </div>
+      ) : null}
+    </div>
+  );
+}
 function RecordNode(props: { rec: RemoteRecord }) {
   const { rec } = props;
   const [open, setOpen] = React.useState(false);
@@ -142,6 +240,8 @@ export default function Datos(props: { active: boolean }) {
     };
   }, [props.active]);
 
+  const [view, setView] = React.useState<"tablas" | "arbol">("tablas");
+
   const groups = React.useMemo(() => {
     const g = new Map<string, RemoteRecord[]>();
     for (const r of records ?? []) {
@@ -155,7 +255,13 @@ export default function Datos(props: { active: boolean }) {
     <>
       <h1 className="px-3 text-lg font-bold tracking-tight sm:text-[19px]">Datos</h1>
       <div aria-hidden="true" className="-mx-4 mb-3 mt-3 h-px bg-border" />
-      <div className="grid gap-1 px-3">
+      <div className="grid gap-3 px-3">
+        {records && records.length > 0 ? (
+          <div className="flex gap-2">
+            <Button size="sm" variant={view === "tablas" ? "default" : "ghost"} onClick={() => setView("tablas")}>Tablas</Button>
+            <Button size="sm" variant={view === "arbol" ? "default" : "ghost"} onClick={() => setView("arbol")}>Árbol</Button>
+          </div>
+        ) : null}
         {err ? <p className="text-[13px] text-destructive">{err}</p> : null}
         {!records && !err ? (
           <div className="grid gap-1" aria-busy="true" aria-label="Cargando datos">
@@ -165,9 +271,14 @@ export default function Datos(props: { active: boolean }) {
           </div>
         ) : null}
         {records && records.length === 0 ? <Empty>La nube está vacía.</Empty> : null}
-        {groups.map(([type, rows]) => (
-          <TypeGroup key={type} type={type} rows={rows} />
-        ))}
+        {records && records.length > 0 && view === "tablas" ? <TablesView records={records} /> : null}
+        {records && records.length > 0 && view === "arbol" ? (
+          <div className="grid gap-1">
+            {groups.map(([type, rows]) => (
+              <TypeGroup key={type} type={type} rows={rows} />
+            ))}
+          </div>
+        ) : null}
       </div>
     </>
   );
