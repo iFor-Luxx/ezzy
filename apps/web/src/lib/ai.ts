@@ -1,15 +1,7 @@
-// Atajos para usar la IA configurada en Configuración desde cualquier pestaña.
-export function inferenceBase(): string {
-  return typeof window !== "undefined" && window.location.port === "5173" ? "/oc-api" : "https://opencode.ai/inference/go";
-}
-
-export function storedKey(): string {
-  try {
-    return sessionStorage.getItem("ezzy.oc.key") || localStorage.getItem("ezzy.oc.key.saved") || "";
-  } catch {
-    return "";
-  }
-}
+// Helpers no-secretos de IA. La API key ya NO vive en el navegador:
+// se guarda una vez en tu nube (Worker/D1 write-only) vía lib/aiServer.ts
+// y todos los usos (Asistente, Catálogo) van por ese proxy. Vale en
+// localhost y en cualquier PC sin repegar.
 
 export function storedModelId(): string {
   try {

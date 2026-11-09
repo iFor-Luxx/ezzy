@@ -4,8 +4,8 @@ import { Button, Card, Dialog, Field, Input, Badge, Empty, Select, SelectTrigger
 import { newId, nowIso, solesToMinor, validateQty, tierLabel, parseTierLabel, prettyVariant, formatMoney, audit, type WebState } from "../lib/store";
 import { productChanges, pushChanges, deleteProductChanges } from "../lib/sync";
 import { buildUpsert, buildTombstone } from "../lib/cloud";
-import { pingApi } from "@ezzy/ai-opencode";
-import { inferenceBase, storedKey, storedModelId } from "../lib/ai";
+import { storedModelId } from "../lib/ai";
+import { aiChat } from "../lib/aiServer";
 import { toast } from "../components/ui/toast";
 
 interface Tier { qty: string; soles: string; }
@@ -76,18 +76,14 @@ export default function Catalogo(props: { s: WebState; set: React.Dispatch<React
 
   async function mejorar(): Promise<void> {
     try {
-      const k = storedKey();
-      if (!k.startsWith("oc_sk_")) throw new Error("pega tu API key en Configuración");
       const mid = storedModelId();
-      if (!mid) throw new Error("elige un modelo en Configuración");
+      if (!mid) throw new Error("elige un modelo en Configuración → Asistente IA");
       const tela = fabric.trim();
       if (!tela) throw new Error("escribe la tela primero");
       setAiBusy(true);
-      // Stream: la descripción aparece en vivo, sin esperar todo al final.
+      // Stream vía tu nube (proxy write-only): la descripción aparece en vivo.
       let acc = "";
-      const out = await pingApi({
-        baseURL: inferenceBase(),
-        apiKey: k,
+      const out = await aiChat({
         modelId: mid,
         text: `Redacta la descripción de este material para ficha de prenda. Usa el nombre exacto tal cual, sin traducirlo ni generalizarlo. Investiga y destaca los beneficios reales de este material según su composición y uso ideal. Una sola frase corta (máx 25 palabras), precisa y clara, sin emojis, sin comillas ni explicaciones. Material: "${tela}"`,
         sessionId: crypto.randomUUID(),
@@ -100,7 +96,7 @@ export default function Catalogo(props: { s: WebState; set: React.Dispatch<React
       });
       setFabric(out.trim());
     } catch (e) {
-      toast.add({ title: "Error", description: e instanceof Error ? e.message.replace(/oc_sk_\S+/g, "oc_sk_…") : "error" });
+      toast.add({ title: "Error", description: e instanceof Error ? e.message : "error" });
     } finally {
       setAiBusy(false);
     }

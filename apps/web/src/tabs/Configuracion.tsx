@@ -1,7 +1,6 @@
 import React from "react";
-import { Sparkles, Gauge, Database } from "lucide-react";
+import { Sparkles, Gauge } from "lucide-react";
 import Asistente from "./Asistente";
-import DatosTab from "./Datos";
 import Uso from "./Uso";
 import type { WebState } from "../lib/store";
 
@@ -9,7 +8,6 @@ import type { WebState } from "../lib/store";
 // Para agregar una sección futura: añade su entrada aquí y su caso abajo.
 const SECTIONS = [
   { id: "asistente", label: "Asistente IA", icon: Sparkles },
-  { id: "datos", label: "Datos", icon: Database },
   { id: "uso", label: "Uso", icon: Gauge },
 ] as const;
 
@@ -40,7 +38,6 @@ export default function Configuracion(props: { s: WebState; set: React.Dispatch<
       </aside>
       <div className="min-w-0 border-t border-border p-4 md:border-l md:border-t-0">
         <div hidden={section !== "asistente"}><Asistente s={props.s} set={props.set} active={section === "asistente"} /></div>
-        <div hidden={section !== "datos"}><DatosTab active={section === "datos"} /></div>
         <div hidden={section !== "uso"}><Uso active={section === "uso"} /></div>
       </div>
     </div>

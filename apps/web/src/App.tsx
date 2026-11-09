@@ -1,8 +1,9 @@
 import React from "react";
-import { LayoutGrid, MessageSquareText, ScanEye, Settings } from "lucide-react";
+import { LayoutGrid, MessageSquareText, ScanEye, Database, Settings } from "lucide-react";
 import Catalogo from "./tabs/Catalogo";
 import Mensajes from "./tabs/Mensajes";
 import Contexto from "./tabs/Contexto";
+import Base from "./tabs/Datos";
 import Configuracion from "./tabs/Configuracion";
 import { useWebState, audit } from "./lib/store";
 import { Toaster, toast } from "./components/ui/toast";
@@ -14,6 +15,7 @@ const TABS = [
   { id: "catalogo", label: "Catálogo", icon: LayoutGrid },
   { id: "mensajes", label: "Mensajes", icon: MessageSquareText },
   { id: "contexto", label: "Contexto", icon: ScanEye },
+  { id: "base", label: "Base", icon: Database },
   { id: "config", label: "Configuración", icon: Settings },
 ] as const;
 
@@ -103,6 +105,7 @@ export default function App() {
           {visited.includes("mensajes") && <div hidden={tab !== "mensajes"}><Mensajes s={s} set={set} /></div>}
           {visited.includes("config") && <div hidden={tab !== "config"}><Configuracion s={s} set={set} /></div>}
           {visited.includes("contexto") && <div hidden={tab !== "contexto"}><Contexto s={s} set={set} /></div>}
+          {visited.includes("base") && <div hidden={tab !== "base"}><Base active={tab === "base"} /></div>}
         </main>
         <p className="mt-4 text-center text-xs text-muted-foreground sm:mt-6 sm:text-[13px]">
           Atajos de la extensión: Ctrl+Shift+Y selector · U/I/O favoritos. La extensión nunca envía sola.
